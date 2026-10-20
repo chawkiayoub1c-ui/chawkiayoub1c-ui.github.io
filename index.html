@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unfollow Radar</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2433;--mute:#6b7280;--line:#e3dfd5;--acc:#2f5bea;--ok:#1f8f5f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171f;--card:#1c2130;--ink:#eceff6;--mute:#98a1b5;--line:#2c3348;--acc:#7b9cff;--ok:#4cc38a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171f;--card:#1c2130;--ink:#eceff6;--mute:#98a1b5;--line:#2c3348;--acc:#7b9cff;--ok:#4cc38a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:26px;margin:8px 0 4px}
+p{color:var(--mute);margin:0 0 16px}
+.drop{display:grid;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.drop label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600}
+.drop span.s{font-weight:400;color:var(--mute);font-size:14px}
+input[type=file]{max-width:55%;font-size:13px}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 16px;background:var(--acc);color:#fff;font-weight:600}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+#err{color:#d33;margin:10px 0;min-height:1.4em}
+.stats{display:flex;gap:10px;margin:18px 0 10px;flex-wrap:wrap}
+.stats div{flex:1;min-width:90px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stats b{display:block;font-size:22px}
+.stats small{color:var(--mute)}
+#q{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--card)}
+.row:first-child{border-radius:12px 12px 0 0}.row:last-child{border-radius:0 0 12px 12px;border-bottom:0}
+.row.done{opacity:.5}
+.row .n{flex:1;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:right;white-space:nowrap}
+.row a{color:var(--acc);font-weight:600;text-decoration:none;white-space:nowrap}
+.row input{width:20px;height:20px;accent-color:var(--ok)}
+#list{margin-top:6px;border:1px solid var(--line);border-radius:12px}
+.empty{padding:18px;color:var(--mute);text-align:center}
+.tip{font-size:14px;color:var(--mute);margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>Unfollow Radar</h1>
+<p>أنت تتابعهم وهم لا يتابعونك. الملفات تبقى في هاتفك ولا تُرفع إلى أي مكان.</p>
+
+<div class="drop">
+<label>followers_1.json <span class="s">(يمكن اختيار عدة ملفات followers)</span><input id="f1" type="file" accept=".json" multiple></label>
+<label>following.json <input id="f2" type="file" accept=".json"></label>
+<button id="go" disabled>قارن</button>
+</div>
+<div id="err" role="alert"></div>
+
+<section id="res" hidden>
+<div class="stats">
+<div><b id="cFollowing">0</b><small>تتابعهم</small></div>
+<div><b id="cFollowers">0</b><small>يتابعونك</small></div>
+<div><b id="cNon">0</b><small>لا يتابعونك</small></div>
+</div>
+<input id="q" type="search" placeholder="ابحث عن حساب" aria-label="بحث">
+<div id="list"></div>
+<p class="tip">اضغط «فتح» لزيارة الحساب ثم ألغِ المتابعة يدويا، وضع علامة ✓ لتتذكر من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.</p>
+</section>
+<p class="tip"><a href="privacy.html">سياسة الخصوصية</a></p>
+<!-- مكان الإعلان: ضع كود AdSense هنا بعد الموافقة -->
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let non=[],done=new Set();
+try{done=new Set(JSON.parse(localStorage.getItem('done')||'[]'))}catch(e){}
+const save=()=>{try{localStorage.setItem('done',JSON.stringify([...done]))}catch(e){}};
+const read=f=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>{try{ok(JSON.parse(r.result))}catch(e){ko(new Error('ملف غير صالح: '+f.name))}};r.onerror=()=>ko(new Error('تعذر قراءة '+f.name));r.readAsText(f)});
+function names(data){
+  let arr=Array.isArray(data)?data:(data.relationships_following||data.relationships_followers||[]);
+  const out=[];
+  for(const e of arr){
+    const s=(e.string_list_data&&e.string_list_data[0])||{};
+    const u=(s.value||e.title||'').trim();
+    if(u)out.push(u.toLowerCase());
+  }
+  return out;
+}
+const upd=()=>{$('go').disabled=!($('f1').files.length&&$('f2').files.length)};
+$('f1').onchange=upd;$('f2').onchange=upd;
+$('go').onclick=async()=>{
+  $('err').textContent='';
+  try{
+    const fl=new Set();
+    for(const f of $('f1').files)names(await read(f)).forEach(n=>fl.add(n));
+    const fg=names(await read($('f2').files[0]));
+    if(!fl.size||!fg.length)throw new Error('لم أجد أي حسابات. تأكد أنك اخترت الملفين الصحيحين.');
+    non=[...new Set(fg)].filter(n=>!fl.has(n)).sort();
+    $('cFollowing').textContent=new Set(fg).size;
+    $('cFollowers').textContent=fl.size;
+    $('cNon').textContent=non.length;
+    $('res').hidden=false;
+    render();
+  }catch(e){$('err').textContent=e.message}
+};
+function render(){
+  const q=$('q').value.trim().toLowerCase();
+  const box=$('list');box.innerHTML='';
+  const items=non.filter(n=>n.includes(q));
+  if(!items.length){box.innerHTML='<div class="empty">لا توجد نتائج.</div>';return}
+  for(const n of items){
+    const r=document.createElement('div');r.className='row'+(done.has(n)?' done':'');
+    const c=document.createElement('input');c.type='checkbox';c.checked=done.has(n);c.setAttribute('aria-label','تم: '+n);
+    c.onchange=()=>{c.checked?done.add(n):done.delete(n);save();r.classList.toggle('done',c.checked)};
+    const s=document.createElement('span');s.className='n';s.textContent=n;
+    const a=document.createElement('a');a.href='https://www.instagram.com/'+encodeURIComponent(n)+'/';a.target='_blank';a.rel='noopener';a.textContent='فتح';
+    r.append(c,s,a);box.append(r);
+  }
+}
+$('q').oninput=render;
+</script>
+</body>
+</html>
