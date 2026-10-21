@@ -1,0 +1,4 @@
+<!-- الصق هذه الأسطر داخل <head> في index.html -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#e1306c">
