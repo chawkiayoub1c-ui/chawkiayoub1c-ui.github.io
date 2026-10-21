@@ -4,53 +4,102 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Unfollow Radar</title>
+<meta name="description" content="اعرف من تتابعه ولا يتابعك بملفين من بيانات إنستغرام، بدون كلمة سر.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2433;--mute:#6b7280;--line:#e3dfd5;--acc:#2f5bea;--ok:#1f8f5f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171f;--card:#1c2130;--ink:#eceff6;--mute:#98a1b5;--line:#2c3348;--acc:#7b9cff;--ok:#4cc38a;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#14171f;--card:#1c2130;--ink:#eceff6;--mute:#98a1b5;--line:#2c3348;--acc:#7b9cff;--ok:#4cc38a;color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{--bg:#f3f5fb;--card:#fff;--ink:#14213d;--mute:#5b6478;--line:#dfe4f0;--acc:#3b5bdb;--on:#fff;--amb:#f59f00;--ok:#1f8f5f;--bad:#d33;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#172036;--ink:#eef1fa;--mute:#9aa4bd;--line:#27324d;--acc:#7c9bff;--on:#0e1424;--amb:#ffc247;--ok:#4cc38a;--bad:#ff7b7b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1424;--card:#172036;--ink:#eef1fa;--mute:#9aa4bd;--line:#27324d;--acc:#7c9bff;--on:#0e1424;--amb:#ffc247;--ok:#4cc38a;--bad:#ff7b7b;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif}
-main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
-h1{font-size:26px;margin:8px 0 4px}
-p{color:var(--mute);margin:0 0 16px}
-.drop{display:grid;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 Cairo,"Segoe UI",Tahoma,system-ui,sans-serif}
+main{max-width:680px;margin:0 auto;padding:12px 16px 40px}
+h1{font-size:34px;line-height:1.2;margin:0 0 10px;font-weight:800}
+h2{font-size:22px;margin:0 0 12px;font-weight:800}
+p{margin:0 0 14px;color:var(--mute)}
+a{color:var(--acc)}
+.hero{text-align:center;padding:8px 0 28px}
+.hero-art{width:min(300px,78vw);height:auto;display:block;margin:0 auto 6px}
+.cta{display:inline-block;background:var(--acc);color:var(--on);text-decoration:none;font-weight:800;padding:13px 30px;border-radius:999px;font-size:17px}
+section{margin-top:30px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.steps li::before{content:counter(s);flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center;font-weight:800}
+.steps b{display:block;color:var(--ink)}
+.steps span{color:var(--mute);font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.drop{display:grid;gap:12px}
 .drop label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600}
-.drop span.s{font-weight:400;color:var(--mute);font-size:14px}
-input[type=file]{max-width:55%;font-size:13px}
-button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 16px;background:var(--acc);color:#fff;font-weight:600}
-button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-button:disabled{opacity:.45;cursor:not-allowed}
-#err{color:#d33;margin:10px 0;min-height:1.4em}
-.stats{display:flex;gap:10px;margin:18px 0 10px;flex-wrap:wrap}
-.stats div{flex:1;min-width:90px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.stats b{display:block;font-size:22px}
-.stats small{color:var(--mute)}
-#q{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;margin-bottom:10px}
-.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--card)}
-.row:first-child{border-radius:12px 12px 0 0}.row:last-child{border-radius:0 0 12px 12px;border-bottom:0}
-.row.done{opacity:.5}
+.drop input[type=file]{max-width:52%;font-size:13px}
+.or{text-align:center;color:var(--mute);font-size:14px}
+button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:12px;padding:12px 18px;background:var(--acc);color:var(--on)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#err{color:var(--bad);margin:10px 0 0;min-height:1.4em}
+.stats{display:flex;gap:10px;margin:18px 0 12px;flex-wrap:wrap}
+.stats div{flex:1;min-width:92px;background:var(--bg);border-radius:12px;padding:10px 12px}
+.stats b{display:block;font-size:24px}.stats small{color:var(--mute)}
+#q{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;margin-bottom:10px}
+#list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}.row.done{opacity:.45}
 .row .n{flex:1;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:right;white-space:nowrap}
-.row a{color:var(--acc);font-weight:600;text-decoration:none;white-space:nowrap}
+.row a{font-weight:800;text-decoration:none;white-space:nowrap}
 .row input{width:20px;height:20px;accent-color:var(--ok)}
-#list{margin-top:6px;border:1px solid var(--line);border-radius:12px}
 .empty{padding:18px;color:var(--mute);text-align:center}
-.tip{font-size:14px;color:var(--mute);margin-top:14px}
+.tip{font-size:14px;color:var(--mute);margin:12px 0 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:4px 16px}
+summary{cursor:pointer;font-weight:800;padding:10px 0}
+details ol{margin:4px 0 12px;padding-inline-start:22px;color:var(--mute)}details li{margin-bottom:6px}
+footer{margin-top:36px;text-align:center;font-size:14px;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 <main>
+<header class="hero">
+<svg class="hero-art" viewBox="0 0 320 300" role="img" aria-label="شخص محتار يحك رأسه بيديه">
+<g fill="none" stroke="var(--acc)" opacity=".28" stroke-width="2"><circle cx="160" cy="150" r="138"/><circle cx="160" cy="150" r="98"/><circle cx="160" cy="150" r="58"/><path d="M160 12V288M22 150H298" stroke-dasharray="4 8"/></g>
+<path d="M60 300C60 236 105 214 160 214s100 22 100 86z" fill="var(--acc)"/>
+<rect x="145" y="188" width="30" height="34" rx="10" fill="#d9a77d"/>
+<ellipse cx="112" cy="150" rx="7" ry="12" fill="#e8b48a"/><ellipse cx="208" cy="150" rx="7" ry="12" fill="#e8b48a"/>
+<ellipse cx="160" cy="146" rx="49" ry="56" fill="#f2c29b"/>
+<path d="M110 138C104 92 138 78 162 78s56 14 50 60c-10-24-28-32-50-32s-42 8-52 32z" fill="#2b2118"/>
+<g fill="#14213d"><circle cx="143" cy="152" r="4.5"/><circle cx="177" cy="152" r="4.5"/></g>
+<g fill="none" stroke="#2b2118" stroke-width="4" stroke-linecap="round"><path d="M129 139q13-5 26 1"/><path d="M167 130q13-10 26-2"/><path d="M146 181q7-7 14 0t14 0" stroke="#14213d" stroke-width="3.5"/></g>
+<g fill="none" stroke="var(--acc)" stroke-width="26" stroke-linecap="round"><path d="M92 266C66 212 84 152 116 118"/><path d="M228 266C254 212 236 152 204 118"/></g>
+<g fill="#f2c29b"><circle cx="116" cy="110" r="16"/><circle cx="204" cy="110" r="16"/></g>
+<g fill="none" stroke="#14213d" stroke-width="3" stroke-linecap="round" opacity=".7"><path d="M96 92l-8-8M104 84l-3-11M115 82l2-11"/><path d="M224 92l8-8M216 84l3-11M205 82l-2-11"/></g>
+<g fill="var(--amb)" font-weight="800" font-family="Cairo,Tahoma,sans-serif"><text x="40" y="70" font-size="40" transform="rotate(-14 40 70)">?</text><text x="262" y="60" font-size="34" transform="rotate(12 262 60)">؟</text><text x="236" y="160" font-size="26" transform="rotate(10 236 160)">?</text></g>
+</svg>
 <h1>Unfollow Radar</h1>
-<p>أنت تتابعهم وهم لا يتابعونك. الملفات تبقى في هاتفك ولا تُرفع إلى أي مكان.</p>
+<p>محتار من لا يتابعك؟ ارفع ملفين من بيانات إنستغرام وسنكشفهم لك في ثوان، بدون كلمة سر.</p>
+<a class="cta" href="#tool">ابدأ الآن</a>
+</header>
 
+<section aria-labelledby="h-how">
+<h2 id="h-how">كيف يعمل في 4 خطوات</h2>
+<ol class="steps">
+<li><div><b>اطلب بياناتك من إنستغرام</b><span>الإعدادات، ثم مركز الحسابات، ثم تنزيل معلوماتك. اختر المتابعين والمتابَعين فقط، وصيغة JSON.</span></div></li>
+<li><div><b>نزّل ملف zip</b><span>سيصلك إشعار أو بريد عندما يصبح جاهزا، ثم نزّل الملف إلى هاتفك.</span></div></li>
+<li><div><b>ارفعه هنا</b><span>اختر ملف zip كما هو، أو الملفين followers_1.json وfollowing.json بعد الاستخراج.</span></div></li>
+<li><div><b>شاهد النتيجة</b><span>تظهر قائمة من تتابعه ولا يتابعك. اضغط «فتح» ثم ألغِ المتابعة يدويا.</span></div></li>
+</ol>
+</section>
+
+<section id="tool" class="card" aria-labelledby="h-tool">
+<h2 id="h-tool">ابدأ المقارنة</h2>
+<p>الملفات تُقرأ داخل هاتفك فقط ولا تُرفع إلى أي مكان.</p>
 <div class="drop">
-<label>followers_1.json <span class="s">(يمكن اختيار عدة ملفات followers)</span><input id="f1" type="file" accept=".json" multiple></label>
+<label>ملف zip الكامل <input id="fz" type="file" accept=".zip"></label>
+<div class="or">أو اختر الملفين بعد الاستخراج</div>
+<label>followers_1.json <input id="f1" type="file" accept=".json" multiple></label>
 <label>following.json <input id="f2" type="file" accept=".json"></label>
 <button id="go" disabled>قارن</button>
 </div>
 <div id="err" role="alert"></div>
-
-<section id="res" hidden>
+<div id="res" hidden>
 <div class="stats">
 <div><b id="cFollowing">0</b><small>تتابعهم</small></div>
 <div><b id="cFollowers">0</b><small>يتابعونك</small></div>
@@ -58,12 +107,32 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <input id="q" type="search" placeholder="ابحث عن حساب" aria-label="بحث">
 <div id="list"></div>
-<p class="tip">اضغط «فتح» لزيارة الحساب ثم ألغِ المتابعة يدويا، وضع علامة ✓ لتتذكر من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.</p>
+<p class="tip">ضع علامة ✓ على من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.</p>
+</div>
 </section>
-<p class="tip"><a href="privacy.html">سياسة الخصوصية</a></p>
-<!-- مكان الإعلان: ضع كود AdSense هنا بعد الموافقة -->
-</main>
 
+<section>
+<details>
+<summary>شرح مفصل لتنزيل البيانات من إنستغرام</summary>
+<ol>
+<li>افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.</li>
+<li>اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.</li>
+<li>اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.</li>
+<li>اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.</li>
+<li>اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.</li>
+<li>انتظر الإشعار أو البريد، ونزّل ملف zip.</li>
+</ol>
+<p class="tip">أسماء الأزرار قد تختلف قليلا حسب اللغة والنسخة. المهم: المتابعون والمتابَعون فقط، وبصيغة JSON.</p>
+</details>
+</section>
+
+<footer>
+<p><a href="privacy.html">سياسة الخصوصية</a></p>
+<p>Unfollow Radar غير تابع لإنستغرام أو Meta.</p>
+<!-- مكان الإعلان: ضع كود AdSense هنا بعد الموافقة -->
+</footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 let non=[],done=new Set();
@@ -80,14 +149,30 @@ function names(data){
   }
   return out;
 }
-const upd=()=>{$('go').disabled=!($('f1').files.length&&$('f2').files.length)};
-$('f1').onchange=upd;$('f2').onchange=upd;
+const upd=()=>{$('go').disabled=!($('fz').files.length||($('f1').files.length&&$('f2').files.length))};
+$('f1').onchange=upd;$('f2').onchange=upd;$('fz').onchange=upd;
+async function load(){
+  const fl=new Set();let fg=[];
+  if($('fz').files.length){
+    if(typeof JSZip==='undefined')throw new Error('تعذر تحميل مكتبة zip. تأكد من الإنترنت أو استخرج الملفين واخترهما.');
+    const z=await JSZip.loadAsync($('fz').files[0]);
+    let found=false;
+    for(const n of Object.keys(z.files)){
+      const base=n.split('/').pop();
+      if(/^followers_\d+\.json$/.test(base)){names(JSON.parse(await z.files[n].async('string'))).forEach(x=>fl.add(x));found=true}
+      else if(base==='following.json'){fg=names(JSON.parse(await z.files[n].async('string')));found=true}
+    }
+    if(!found)throw new Error('لم أجد ملفات followers وfollowing داخل الـ zip. تأكد أنك اخترت JSON وأن البيانات تشمل المتابعين والمتابَعين.');
+  }else{
+    for(const f of $('f1').files)names(await read(f)).forEach(n=>fl.add(n));
+    fg=names(await read($('f2').files[0]));
+  }
+  return {fl,fg};
+}
 $('go').onclick=async()=>{
   $('err').textContent='';
   try{
-    const fl=new Set();
-    for(const f of $('f1').files)names(await read(f)).forEach(n=>fl.add(n));
-    const fg=names(await read($('f2').files[0]));
+    const {fl,fg}=await load();
     if(!fl.size||!fg.length)throw new Error('لم أجد أي حسابات. تأكد أنك اخترت الملفين الصحيحين.');
     non=[...new Set(fg)].filter(n=>!fl.has(n)).sort();
     $('cFollowing').textContent=new Set(fg).size;
@@ -95,7 +180,7 @@ $('go').onclick=async()=>{
     $('cNon').textContent=non.length;
     $('res').hidden=false;
     render();
-  }catch(e){$('err').textContent=e.message}
+  }catch(e){$('err').textContent=e.message||'حدث خطأ. حاول مرة أخرى.'}
 };
 function render(){
   const q=$('q').value.trim().toLowerCase();
