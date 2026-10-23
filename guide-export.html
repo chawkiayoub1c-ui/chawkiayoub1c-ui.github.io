@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>كيف تحمّل بياناتك من إنستغرام | Unfollow Radar</title>
+<meta name="description" content="شرح خطوة بخطوة لتحميل ملفات المتابِعين والمتابَعين من إنستغرام بصيغة JSON.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a14">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5fb;--card:#fff;--ink:#14213d;--mute:#5b6478;--line:#dfe4f0;--acc:#3b5bdb;--on:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1424;--card:#172036;--ink:#eef1fa;--mute:#9aa4bd;--line:#27324d;--acc:#7c9bff;--on:#0e1424}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.9 Cairo,"Segoe UI",Tahoma,system-ui,sans-serif}
+main{max-width:680px;margin:0 auto;padding:16px 18px 48px}
+nav{display:flex;flex-wrap:wrap;gap:6px 16px;padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:22px;font-size:15px}
+a{color:var(--acc)}
+h1{font-size:30px;line-height:1.4;margin:0 0 12px;font-weight:800}
+h2{font-size:21px;margin:30px 0 8px;font-weight:800}
+.lead{color:var(--mute);font-size:17px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 18px;margin:16px 0}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px;text-align:center}
+footer a{margin:0 8px}
+</style>
+</head>
+<body>
+<main>
+<nav><a href="index.html">الرئيسية</a><a href="guide-export.html">تحميل بياناتك</a><a href="about.html">من نحن</a><a href="contact.html">اتصل بنا</a></nav>
+
+<h1>كيف تحمّل بياناتك من إنستغرام</h1>
+<p class="lead">لمعرفة من لا يتابعك تحتاج ملفين يوفرهما إنستغرام مجاناً: قائمة المتابِعين وقائمة المتابَعين.</p>
+<div class="box"><p>قد تختلف أسماء القوائم قليلاً حسب إصدار التطبيق ولغته، لكن المسار العام واحد.</p></div>
+
+<h2>الخطوات</h2>
+<ol>
+<li>افتح تطبيق إنستغرام واذهب إلى ملفك الشخصي.</li>
+<li>اضغط على القائمة (☰) ثم <b>الإعدادات والنشاط</b>.</li>
+<li>ادخل إلى <b>مركز الحسابات</b> ثم <b>معلوماتك وأذوناتك</b>.</li>
+<li>اختر <b>تصدير معلوماتك</b> ثم <b>إنشاء تصدير</b>.</li>
+<li>اختر حسابك، ثم <b>التصدير إلى الجهاز</b>.</li>
+<li>اضغط <b>تخصيص المعلومات</b> واختر <b>المتابِعون والمتابَعون</b> فقط، فهذا يجعل الملف أصغر وأسرع.</li>
+<li>اختر النطاق الزمني <b>كل الوقت</b>، والصيغة <b>JSON</b> (مهم جداً).</li>
+<li>أكّد الطلب وانتظر الإشعار أو الرسالة التي تخبرك بأن الملف جاهز، وقد يستغرق ذلك دقائق أو أكثر.</li>
+<li>حمّل الملف المضغوط (ZIP) على هاتفك.</li>
+</ol>
+
+<h2>ماذا بعد؟</h2>
+<p>افتح الأداة وارفع الملف المضغوط كما هو، أو الملفين <b>followers_1.json</b> و<b>following.json</b> بعد فك الضغط.</p>
+
+<h2>أخطاء شائعة</h2>
+<ul>
+<li>اختيار صيغة HTML بدل JSON: الأداة تحتاج JSON.</li>
+<li>استعمال تصدير قديم: صدّر من جديد لتحصل على أحدث قائمة.</li>
+</ul>
+
+<footer><a href="about.html">من نحن</a><a href="contact.html">اتصل بنا</a><a href="privacy.html">سياسة الخصوصية</a><p>Unfollow Radar أداة مستقلة وغير تابعة لإنستغرام أو Meta.</p></footer>
+</main>
+</body>
+</html>
