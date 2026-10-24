@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Unfollow Radar</title><link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0a0a14">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7906529185553558"
-     crossorigin="anonymous"></script>
-<meta name="description" content="اعرف من تتابعه ولا يتابعك بملفين من بيانات إنستغرام، بدون كلمة سر.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7906529185553558" crossorigin="anonymous"></script>
+<meta id="md" name="description" content="اعرف من تتابعه ولا يتابعك بملفين من بيانات إنستغرام، بدون كلمة سر.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -57,12 +56,19 @@ summary{cursor:pointer;font-weight:800;padding:10px 0}
 details ol{margin:4px 0 12px;padding-inline-start:22px;color:var(--mute)}details li{margin-bottom:6px}
 footer{margin-top:36px;text-align:center;font-size:14px;color:var(--mute)}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.bar{display:flex;justify-content:flex-end;padding-top:6px}
+#lang{font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+#gt{margin-top:8px;text-align:center}
+body{top:0!important}
+html[dir=rtl] .row .n{text-align:right}html[dir=ltr] .row .n{text-align:left}
 </style>
 </head>
 <body>
 <main>
+<div class="bar"><select id="lang" aria-label="Language"><option value="ar">العربية</option><option value="fr">Français</option><option value="en">English</option><option value="other" data-i="ot"></option></select></div>
+<div id="gt" translate="no"></div>
 <header class="hero">
-<svg class="hero-art" viewBox="0 0 320 300" role="img" aria-label="شخص محتار يحك رأسه بيديه">
+<svg class="hero-art" viewBox="0 0 320 300" role="img" data-al="sv">
 <g fill="none" stroke="var(--acc)" opacity=".28" stroke-width="2"><circle cx="160" cy="150" r="138"/><circle cx="160" cy="150" r="98"/><circle cx="160" cy="150" r="58"/><path d="M160 12V288M22 150H298" stroke-dasharray="4 8"/></g>
 <path d="M60 300C60 236 105 214 160 214s100 22 100 86z" fill="var(--acc)"/>
 <rect x="145" y="188" width="30" height="34" rx="10" fill="#d9a77d"/>
@@ -76,72 +82,132 @@ footer{margin-top:36px;text-align:center;font-size:14px;color:var(--mute)}
 <g fill="none" stroke="#14213d" stroke-width="3" stroke-linecap="round" opacity=".7"><path d="M96 92l-8-8M104 84l-3-11M115 82l2-11"/><path d="M224 92l8-8M216 84l3-11M205 82l-2-11"/></g>
 <g fill="var(--amb)" font-weight="800" font-family="Cairo,Tahoma,sans-serif"><text x="40" y="70" font-size="40" transform="rotate(-14 40 70)">?</text><text x="262" y="60" font-size="34" transform="rotate(12 262 60)">؟</text><text x="236" y="160" font-size="26" transform="rotate(10 236 160)">?</text></g>
 </svg>
-<h1>Unfollow Radar</h1>
-<p>محتار من لا يتابعك؟ ارفع ملفين من بيانات إنستغرام وسنكشفهم لك في ثوان، بدون كلمة سر.</p>
-<a class="cta" href="#tool">ابدأ الآن</a>
+<h1 translate="no">Unfollow Radar</h1>
+<p data-i="hp"></p>
+<a class="cta" href="#tool" data-i="cta"></a>
 </header>
-
 <section aria-labelledby="h-how">
-<h2 id="h-how">كيف يعمل في 4 خطوات</h2>
+<h2 id="h-how" data-i="hh"></h2>
 <ol class="steps">
-<li><div><b>اطلب بياناتك من إنستغرام</b><span>الإعدادات، ثم مركز الحسابات، ثم تنزيل معلوماتك. اختر المتابعين والمتابَعين فقط، وصيغة JSON.</span></div></li>
-<li><div><b>نزّل ملف zip</b><span>سيصلك إشعار أو بريد عندما يصبح جاهزا، ثم نزّل الملف إلى هاتفك.</span></div></li>
-<li><div><b>ارفعه هنا</b><span>اختر ملف zip كما هو، أو الملفين followers_1.json وfollowing.json بعد الاستخراج.</span></div></li>
-<li><div><b>شاهد النتيجة</b><span>تظهر قائمة من تتابعه ولا يتابعك. اضغط «فتح» ثم ألغِ المتابعة يدويا.</span></div></li>
+<li><div><b data-i="s1t"></b><span data-i="s1d"></span></div></li>
+<li><div><b data-i="s2t"></b><span data-i="s2d"></span></div></li>
+<li><div><b data-i="s3t"></b><span data-i="s3d"></span></div></li>
+<li><div><b data-i="s4t"></b><span data-i="s4d"></span></div></li>
 </ol>
 </section>
-
+<section id="vid" hidden><h2 data-i="vh"></h2><div id="vbox" class="card" style="padding:0;overflow:hidden"></div></section>
 <section id="tool" class="card" aria-labelledby="h-tool">
-<h2 id="h-tool">ابدأ المقارنة</h2>
-<p>الملفات تُقرأ داخل هاتفك فقط ولا تُرفع إلى أي مكان.</p>
+<h2 id="h-tool" data-i="th"></h2>
+<p data-i="tp"></p>
 <div class="drop">
-<label>ملف zip الكامل <input id="fz" type="file" accept=".zip"></label>
-<div class="or">أو اختر الملفين بعد الاستخراج</div>
+<label><span data-i="lz"></span> <input id="fz" type="file" accept=".zip"></label>
+<div class="or" data-i="or"></div>
 <label>followers_1.json <input id="f1" type="file" accept=".json" multiple></label>
 <label>following.json <input id="f2" type="file" accept=".json"></label>
-<button id="go" disabled>قارن</button>
+<button id="go" disabled data-i="go"></button>
 </div>
 <div id="err" role="alert"></div>
 <div id="res" hidden>
 <div class="stats">
-<div><b id="cFollowing">0</b><small>تتابعهم</small></div>
-<div><b id="cFollowers">0</b><small>يتابعونك</small></div>
-<div><b id="cNon">0</b><small>لا يتابعونك</small></div>
+<div><b id="cFollowing">0</b><small data-i="c1"></small></div>
+<div><b id="cFollowers">0</b><small data-i="c2"></small></div>
+<div><b id="cNon">0</b><small data-i="c3"></small></div>
 </div>
-<input id="q" type="search" placeholder="ابحث عن حساب" aria-label="بحث">
-<div id="list"></div>
-<p class="tip">ضع علامة ✓ على من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.</p>
+<input id="q" type="search" data-ph="sp" data-al="sa">
+<div id="list" translate="no"></div>
+<p class="tip" data-i="tip"></p>
 </div>
 </section>
-
 <section>
 <details>
-<summary>شرح مفصل لتنزيل البيانات من إنستغرام</summary>
+<summary data-i="ds"></summary>
 <ol>
-<li>افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.</li>
-<li>اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.</li>
-<li>اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.</li>
-<li>اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.</li>
-<li>اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.</li>
-<li>انتظر الإشعار أو البريد، ونزّل ملف zip.</li>
+<li data-i="d1"></li><li data-i="d2"></li><li data-i="d3"></li><li data-i="d4"></li><li data-i="d5"></li><li data-i="d6"></li>
 </ol>
-<p class="tip">أسماء الأزرار قد تختلف قليلا حسب اللغة والنسخة. المهم: المتابعون والمتابَعون فقط، وبصيغة JSON.</p>
+<p class="tip" data-i="dt"></p>
 </details>
 </section>
-
-<footer>
-<p><a href="privacy.html">سياسة الخصوصية</a></p>
-<p>Unfollow Radar غير تابع لإنستغرام أو Meta.</p>
+<footer><p><a href="about.html" data-i="ab"></a> · <a href="contact.html" data-i="ct"></a> · <a href="privacy.html" data-i="pv"></a></p>
+<p><a href="guide-export.html" data-i="g1"></a> · <a href="guide-use.html" data-i="g2"></a> · <a href="guide-safe.html" data-i="g3"></a></p>
+<p data-i="dc"></p>
 <!-- مكان الإعلان: ضع كود AdSense هنا بعد الموافقة -->
 </footer>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let non=[],done=new Set();
-try{done=new Set(JSON.parse(localStorage.getItem('done')||'[]'))}catch(e){}
-const save=()=>{try{localStorage.setItem('done',JSON.stringify([...done]))}catch(e){}};
-const read=f=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>{try{ok(JSON.parse(r.result))}catch(e){ko(new Error('ملف غير صالح: '+f.name))}};r.onerror=()=>ko(new Error('تعذر قراءة '+f.name));r.readAsText(f)});
+const T={
+ar:{vh:"فيديو الشرح",ab:"من نحن",ct:"اتصل بنا",g1:"تحميل بياناتك",g2:"طريقة الاستعمال",g3:"نصائح الأمان",md:"اعرف من تتابعه ولا يتابعك بملفين من بيانات إنستغرام، بدون كلمة سر.",sv:"شخص محتار يحك رأسه بيديه",hp:"محتار من لا يتابعك؟ ارفع ملفين من بيانات إنستغرام وسنكشفهم لك في ثوان، بدون كلمة سر.",cta:"ابدأ الآن",hh:"كيف يعمل في 4 خطوات",
+s1t:"اطلب بياناتك من إنستغرام",s1d:"الإعدادات، ثم مركز الحسابات، ثم تنزيل معلوماتك. اختر المتابعين والمتابَعين فقط، وصيغة JSON.",
+s2t:"نزّل ملف zip",s2d:"سيصلك إشعار أو بريد عندما يصبح جاهزا، ثم نزّل الملف إلى هاتفك.",
+s3t:"ارفعه هنا",s3d:"اختر ملف zip كما هو، أو الملفين followers_1.json وfollowing.json بعد الاستخراج.",
+s4t:"شاهد النتيجة",s4d:"تظهر قائمة من تتابعه ولا يتابعك. اضغط «فتح» ثم ألغِ المتابعة يدويا.",
+th:"ابدأ المقارنة",tp:"الملفات تُقرأ داخل هاتفك فقط ولا تُرفع إلى أي مكان.",lz:"ملف zip الكامل",or:"أو اختر الملفين بعد الاستخراج",go:"قارن",
+c1:"تتابعهم",c2:"يتابعونك",c3:"لا يتابعونك",sp:"ابحث عن حساب",sa:"بحث",
+tip:"ضع علامة ✓ على من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.",
+ds:"شرح مفصل لتنزيل البيانات من إنستغرام",
+d1:"افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.",d2:"اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.",d3:"اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.",d4:"اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.",d5:"اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.",d6:"انتظر الإشعار أو البريد، ونزّل ملف zip.",
+dt:"أسماء الأزرار قد تختلف قليلا حسب اللغة والنسخة. المهم: المتابعون والمتابَعون فقط، وبصيغة JSON.",
+pv:"سياسة الخصوصية",dc:"Unfollow Radar غير تابع لإنستغرام أو Meta.",
+eJ:"ملف غير صالح: {a}",eR:"تعذر قراءة {a}",eZ:"تعذر تحميل مكتبة zip. تأكد من الإنترنت أو استخرج الملفين واخترهما.",eF:"لم أجد ملفات followers وfollowing داخل الـ zip. تأكد أنك اخترت JSON وأن البيانات تشمل المتابعين والمتابَعين.",eN:"لم أجد أي حسابات. تأكد أنك اخترت الملفين الصحيحين.",eG:"حدث خطأ. حاول مرة أخرى.",nr:"لا توجد نتائج.",dn:"تم: ",op:"فتح",ot:"🌐 لغات أخرى (يتطلب إنترنت)",eO:"لغات أخرى تتطلب اتصالا بالإنترنت."},
+fr:{vh:"Vidéo explicative",ab:"À propos",ct:"Contact",g1:"Télécharger vos données",g2:"Mode d'emploi",g3:"Conseils de sécurité",md:"Découvrez qui vous suivez sans réciprocité grâce à deux fichiers de données Instagram, sans mot de passe.",sv:"Personne perplexe qui se gratte la tête",hp:"Vous vous demandez qui ne vous suit pas en retour ? Importez deux fichiers de vos données Instagram et on les trouve en quelques secondes, sans mot de passe.",cta:"Commencer",hh:"Comment ça marche en 4 étapes",
+s1t:"Demandez vos données à Instagram",s1d:"Paramètres, puis Centre de comptes, puis Télécharger vos informations. Choisissez uniquement Followers et Abonnements, au format JSON.",
+s2t:"Téléchargez le fichier zip",s2d:"Vous recevrez une notification ou un e-mail quand il sera prêt, puis téléchargez-le sur votre téléphone.",
+s3t:"Importez-le ici",s3d:"Choisissez le zip tel quel, ou les deux fichiers followers_1.json et following.json après extraction.",
+s4t:"Voyez le résultat",s4d:"La liste de ceux que vous suivez sans réciprocité s'affiche. Appuyez sur « Ouvrir » puis désabonnez-vous manuellement.",
+th:"Lancer la comparaison",tp:"Les fichiers sont lus uniquement dans votre téléphone et ne sont envoyés nulle part.",lz:"Fichier zip complet",or:"ou choisissez les deux fichiers après extraction",go:"Comparer",
+c1:"Abonnements",c2:"Abonnés",c3:"Ne vous suivent pas",sp:"Rechercher un compte",sa:"Recherche",
+tip:"Cochez ✓ ceux que vous avez traités. Évitez d'en retirer beaucoup d'un coup pour qu'Instagram ne limite pas votre compte.",
+ds:"Guide détaillé pour télécharger les données Instagram",
+d1:"Ouvrez Instagram, touchez votre photo de profil puis ☰.",d2:"Choisissez <b>Paramètres et confidentialité</b> puis <b>Centre de comptes</b>.",d3:"Touchez <b>Vos informations et autorisations</b> puis <b>Télécharger vos informations</b>.",d4:"Choisissez votre compte puis <b>Une partie de vos informations</b>, et cochez uniquement <b>Followers et abonnements</b>.",d5:"Choisissez <b>Exporter vers l'appareil</b>, le format <b>JSON</b>, la période <b>Depuis toujours</b>, puis <b>Lancer l'exportation</b>.",d6:"Attendez la notification ou l'e-mail, puis téléchargez le zip.",
+dt:"Les noms des boutons peuvent varier selon la langue et la version. L'essentiel : uniquement followers et abonnements, au format JSON.",
+pv:"Politique de confidentialité",dc:"Unfollow Radar n'est affilié ni à Instagram ni à Meta.",
+eJ:"Fichier invalide : {a}",eR:"Impossible de lire {a}",eZ:"Impossible de charger la bibliothèque zip. Vérifiez votre connexion ou extrayez les deux fichiers et choisissez-les.",eF:"Aucun fichier followers ou following dans le zip. Vérifiez que vous avez choisi JSON et que les données incluent followers et abonnements.",eN:"Aucun compte trouvé. Vérifiez que vous avez choisi les bons fichiers.",eG:"Une erreur est survenue. Réessayez.",nr:"Aucun résultat.",dn:"Fait : ",op:"Ouvrir",ot:"🌐 Autres langues (Internet requis)",eO:"Les autres langues nécessitent une connexion Internet."},
+en:{vh:"Tutorial video",ab:"About",ct:"Contact us",g1:"Download your data",g2:"How to use",g3:"Safety tips",md:"Find who you follow that doesn't follow you back, using two Instagram data files, no password needed.",sv:"A puzzled person scratching their head",hp:"Wondering who doesn't follow you back? Upload two files from your Instagram data and we'll find them in seconds, no password needed.",cta:"Get started",hh:"How it works in 4 steps",
+s1t:"Request your data from Instagram",s1d:"Settings, then Accounts Center, then Download your information. Choose followers and following only, in JSON format.",
+s2t:"Download the zip file",s2d:"You'll get a notification or email when it's ready, then download it to your phone.",
+s3t:"Upload it here",s3d:"Pick the zip as is, or the two files followers_1.json and following.json after extracting.",
+s4t:"See the result",s4d:"A list of people you follow who don't follow you back appears. Tap \"Open\" then unfollow manually.",
+th:"Start the comparison",tp:"Files are read inside your phone only and are never uploaded anywhere.",lz:"Full zip file",or:"or pick the two files after extracting",go:"Compare",
+c1:"Following",c2:"Followers",c3:"Don't follow back",sp:"Search for an account",sa:"Search",
+tip:"Tick ✓ the ones you're done with. Avoid unfollowing many accounts in a short time so Instagram doesn't limit your account.",
+ds:"Detailed guide to download your Instagram data",
+d1:"Open Instagram, tap your profile picture then ☰.",d2:"Choose <b>Settings and privacy</b> then <b>Accounts Center</b>.",d3:"Tap <b>Your information and permissions</b> then <b>Download your information</b>.",d4:"Choose your account then <b>Some of your information</b>, and tick only <b>Followers and following</b>.",d5:"Choose <b>Export to device</b>, format <b>JSON</b>, date range <b>All time</b>, then <b>Start export</b>.",d6:"Wait for the notification or email, then download the zip.",
+dt:"Button names may vary slightly by language and version. What matters: followers and following only, in JSON format.",
+pv:"Privacy policy",dc:"Unfollow Radar is not affiliated with Instagram or Meta.",
+eJ:"Invalid file: {a}",eR:"Could not read {a}",eZ:"Could not load the zip library. Check your connection or extract the two files and pick them.",eF:"No followers or following files found in the zip. Make sure you chose JSON and that the data includes followers and following.",eN:"No accounts found. Make sure you picked the right files.",eG:"Something went wrong. Please try again.",nr:"No results.",dn:"Done: ",op:"Open",ot:"🌐 Other languages (needs internet)",eO:"Other languages need an internet connection."}
+};
+const lsg=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+let L=lsg('lang');if(!T[L])L=(navigator.language||'ar').slice(0,2);if(!T[L])L='ar';
+const t=k=>T[L][k]||T.en[k]||k;
+class E extends Error{constructor(k,a){super(k);this.k=k;this.a=a}}
+let non=[],done=new Set(),lastErr=null;
+try{done=new Set(JSON.parse(lsg('done')||'[]'))}catch(e){}
+const save=()=>lss('done',JSON.stringify([...done]));
+const msg=e=>e&&e.k?t(e.k).replace('{a}',e.a||''):t('eG');
+function apply(){
+  const d=document.documentElement;d.lang=L;d.dir=L==='ar'?'rtl':'ltr';
+  document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=t(e.dataset.i));
+  document.querySelectorAll('[data-ph]').forEach(e=>e.placeholder=t(e.dataset.ph));
+  document.querySelectorAll('[data-al]').forEach(e=>e.setAttribute('aria-label',t(e.dataset.al)));
+  $('md').content=t('md');
+  $('err').textContent=lastErr?msg(lastErr):'';
+  if(non.length)render();
+}
+function loadGT(){
+  if(window.google&&google.translate)return;
+  window.gtInit=()=>new google.translate.TranslateElement({pageLanguage:L,autoDisplay:false,layout:google.translate.TranslateElement.InlineLayout.SIMPLE},'gt');
+  const s=document.createElement('script');s.src='https://translate.google.com/translate_a/element.js?cb=gtInit';
+  s.onerror=()=>{$('gt').textContent=t('eO')};document.head.append(s);
+}
+$('lang').onchange=e=>{
+  const v=e.target.value;
+  if(v==='other'){lss('gt','1');$('gt').textContent='';loadGT();return}
+  const had=lsg('gt')==='1';L=v;lss('lang',v);lss('gt','0');
+  if(had){document.cookie='googtrans=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';location.reload();return}
+  $('gt').textContent='';apply();
+};
+const read=f=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>{try{ok(JSON.parse(r.result))}catch(e){ko(new E('eJ',f.name))}};r.onerror=()=>ko(new E('eR',f.name));r.readAsText(f)});
 function names(data){
   let arr=Array.isArray(data)?data:(data.relationships_following||data.relationships_followers||[]);
   const out=[];
@@ -157,7 +223,7 @@ $('f1').onchange=upd;$('f2').onchange=upd;$('fz').onchange=upd;
 async function load(){
   const fl=new Set();let fg=[];
   if($('fz').files.length){
-    if(typeof JSZip==='undefined')throw new Error('تعذر تحميل مكتبة zip. تأكد من الإنترنت أو استخرج الملفين واخترهما.');
+    if(typeof JSZip==='undefined')throw new E('eZ');
     const z=await JSZip.loadAsync($('fz').files[0]);
     let found=false;
     for(const n of Object.keys(z.files)){
@@ -165,7 +231,7 @@ async function load(){
       if(/^followers_\d+\.json$/.test(base)){names(JSON.parse(await z.files[n].async('string'))).forEach(x=>fl.add(x));found=true}
       else if(base==='following.json'){fg=names(JSON.parse(await z.files[n].async('string')));found=true}
     }
-    if(!found)throw new Error('لم أجد ملفات followers وfollowing داخل الـ zip. تأكد أنك اخترت JSON وأن البيانات تشمل المتابعين والمتابَعين.');
+    if(!found)throw new E('eF');
   }else{
     for(const f of $('f1').files)names(await read(f)).forEach(n=>fl.add(n));
     fg=names(await read($('f2').files[0]));
@@ -173,233 +239,46 @@ async function load(){
   return {fl,fg};
 }
 $('go').onclick=async()=>{
-  $('err').textContent='';
+  lastErr=null;$('err').textContent='';
   try{
     const {fl,fg}=await load();
-    if(!fl.size||!fg.length)throw new Error('لم أجد أي حسابات. تأكد أنك اخترت الملفين الصحيحين.');
+    if(!fl.size||!fg.length)throw new E('eN');
     non=[...new Set(fg)].filter(n=>!fl.has(n)).sort();
     $('cFollowing').textContent=new Set(fg).size;
     $('cFollowers').textContent=fl.size;
     $('cNon').textContent=non.length;
     $('res').hidden=false;
     render();
-  }catch(e){$('err').textContent=e.message||'حدث خطأ. حاول مرة أخرى.'}
+  }catch(e){lastErr=e;$('err').textContent=msg(e)}
 };
 function render(){
   const q=$('q').value.trim().toLowerCase();
   const box=$('list');box.innerHTML='';
   const items=non.filter(n=>n.includes(q));
-  if(!items.length){box.innerHTML='<div class="empty">لا توجد نتائج.</div>';return}
+  if(!items.length){box.innerHTML='<div class="empty">'+t('nr')+'</div>';return}
   for(const n of items){
     const r=document.createElement('div');r.className='row'+(done.has(n)?' done':'');
-    const c=document.createElement('input');c.type='checkbox';c.checked=done.has(n);c.setAttribute('aria-label','تم: '+n);
+    const c=document.createElement('input');c.type='checkbox';c.checked=done.has(n);c.setAttribute('aria-label',t('dn')+n);
     c.onchange=()=>{c.checked?done.add(n):done.delete(n);save();r.classList.toggle('done',c.checked)};
     const s=document.createElement('span');s.className='n';s.textContent=n;
-    const a=document.createElement('a');a.href='https://www.instagram.com/'+encodeURIComponent(n)+'/';a.target='_blank';a.rel='noopener';a.textContent='فتح';
+    const a=document.createElement('a');a.href='https://www.instagram.com/'+encodeURIComponent(n)+'/';a.target='_blank';a.rel='noopener';a.textContent=t('op');
     r.append(c,s,a);box.append(r);
   }
 }
 $('q').oninput=render;
-</script>
-</body>
-</html>
-<meta name="description" content="اعرف من تتابعه ولا يتابعك بملفين من بيانات إنستغرام، بدون كلمة سر.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#f3f5fb;--card:#fff;--ink:#14213d;--mute:#5b6478;--line:#dfe4f0;--acc:#3b5bdb;--on:#fff;--amb:#f59f00;--ok:#1f8f5f;--bad:#d33;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#172036;--ink:#eef1fa;--mute:#9aa4bd;--line:#27324d;--acc:#7c9bff;--on:#0e1424;--amb:#ffc247;--ok:#4cc38a;--bad:#ff7b7b;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0e1424;--card:#172036;--ink:#eef1fa;--mute:#9aa4bd;--line:#27324d;--acc:#7c9bff;--on:#0e1424;--amb:#ffc247;--ok:#4cc38a;--bad:#ff7b7b;color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 Cairo,"Segoe UI",Tahoma,system-ui,sans-serif}
-main{max-width:680px;margin:0 auto;padding:12px 16px 40px}
-h1{font-size:34px;line-height:1.2;margin:0 0 10px;font-weight:800}
-h2{font-size:22px;margin:0 0 12px;font-weight:800}
-p{margin:0 0 14px;color:var(--mute)}
-a{color:var(--acc)}
-.hero{text-align:center;padding:8px 0 28px}
-.hero-art{width:min(300px,78vw);height:auto;display:block;margin:0 auto 6px}
-.cta{display:inline-block;background:var(--acc);color:var(--on);text-decoration:none;font-weight:800;padding:13px 30px;border-radius:999px;font-size:17px}
-section{margin-top:30px}
-.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:s}
-.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
-.steps li::before{content:counter(s);flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center;font-weight:800}
-.steps b{display:block;color:var(--ink)}
-.steps span{color:var(--mute);font-size:15px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
-.drop{display:grid;gap:12px}
-.drop label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600}
-.drop input[type=file]{max-width:52%;font-size:13px}
-.or{text-align:center;color:var(--mute);font-size:14px}
-button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:12px;padding:12px 18px;background:var(--acc);color:var(--on)}
-button:disabled{opacity:.4;cursor:not-allowed}
-button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-#err{color:var(--bad);margin:10px 0 0;min-height:1.4em}
-.stats{display:flex;gap:10px;margin:18px 0 12px;flex-wrap:wrap}
-.stats div{flex:1;min-width:92px;background:var(--bg);border-radius:12px;padding:10px 12px}
-.stats b{display:block;font-size:24px}.stats small{color:var(--mute)}
-#q{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;margin-bottom:10px}
-#list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
-.row:last-child{border-bottom:0}.row.done{opacity:.45}
-.row .n{flex:1;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:right;white-space:nowrap}
-.row a{font-weight:800;text-decoration:none;white-space:nowrap}
-.row input{width:20px;height:20px;accent-color:var(--ok)}
-.empty{padding:18px;color:var(--mute);text-align:center}
-.tip{font-size:14px;color:var(--mute);margin:12px 0 0}
-details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:4px 16px}
-summary{cursor:pointer;font-weight:800;padding:10px 0}
-details ol{margin:4px 0 12px;padding-inline-start:22px;color:var(--mute)}details li{margin-bottom:6px}
-footer{margin-top:36px;text-align:center;font-size:14px;color:var(--mute)}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-</style>
-</head>
-<body>
-<main>
-<header class="hero">
-<svg class="hero-art" viewBox="0 0 320 300" role="img" aria-label="شخص محتار يحك رأسه بيديه">
-<g fill="none" stroke="var(--acc)" opacity=".28" stroke-width="2"><circle cx="160" cy="150" r="138"/><circle cx="160" cy="150" r="98"/><circle cx="160" cy="150" r="58"/><path d="M160 12V288M22 150H298" stroke-dasharray="4 8"/></g>
-<path d="M60 300C60 236 105 214 160 214s100 22 100 86z" fill="var(--acc)"/>
-<rect x="145" y="188" width="30" height="34" rx="10" fill="#d9a77d"/>
-<ellipse cx="112" cy="150" rx="7" ry="12" fill="#e8b48a"/><ellipse cx="208" cy="150" rx="7" ry="12" fill="#e8b48a"/>
-<ellipse cx="160" cy="146" rx="49" ry="56" fill="#f2c29b"/>
-<path d="M110 138C104 92 138 78 162 78s56 14 50 60c-10-24-28-32-50-32s-42 8-52 32z" fill="#2b2118"/>
-<g fill="#14213d"><circle cx="143" cy="152" r="4.5"/><circle cx="177" cy="152" r="4.5"/></g>
-<g fill="none" stroke="#2b2118" stroke-width="4" stroke-linecap="round"><path d="M129 139q13-5 26 1"/><path d="M167 130q13-10 26-2"/><path d="M146 181q7-7 14 0t14 0" stroke="#14213d" stroke-width="3.5"/></g>
-<g fill="none" stroke="var(--acc)" stroke-width="26" stroke-linecap="round"><path d="M92 266C66 212 84 152 116 118"/><path d="M228 266C254 212 236 152 204 118"/></g>
-<g fill="#f2c29b"><circle cx="116" cy="110" r="16"/><circle cx="204" cy="110" r="16"/></g>
-<g fill="none" stroke="#14213d" stroke-width="3" stroke-linecap="round" opacity=".7"><path d="M96 92l-8-8M104 84l-3-11M115 82l2-11"/><path d="M224 92l8-8M216 84l3-11M205 82l-2-11"/></g>
-<g fill="var(--amb)" font-weight="800" font-family="Cairo,Tahoma,sans-serif"><text x="40" y="70" font-size="40" transform="rotate(-14 40 70)">?</text><text x="262" y="60" font-size="34" transform="rotate(12 262 60)">؟</text><text x="236" y="160" font-size="26" transform="rotate(10 236 160)">?</text></g>
-</svg>
-<h1>Unfollow Radar</h1>
-<p>محتار من لا يتابعك؟ ارفع ملفين من بيانات إنستغرام وسنكشفهم لك في ثوان، بدون كلمة سر.</p>
-<a class="cta" href="#tool">ابدأ الآن</a>
-</header>
-
-<section aria-labelledby="h-how">
-<h2 id="h-how">كيف يعمل في 4 خطوات</h2>
-<ol class="steps">
-<li><div><b>اطلب بياناتك من إنستغرام</b><span>الإعدادات، ثم مركز الحسابات، ثم تنزيل معلوماتك. اختر المتابعين والمتابَعين فقط، وصيغة JSON.</span></div></li>
-<li><div><b>نزّل ملف zip</b><span>سيصلك إشعار أو بريد عندما يصبح جاهزا، ثم نزّل الملف إلى هاتفك.</span></div></li>
-<li><div><b>ارفعه هنا</b><span>اختر ملف zip كما هو، أو الملفين followers_1.json وfollowing.json بعد الاستخراج.</span></div></li>
-<li><div><b>شاهد النتيجة</b><span>تظهر قائمة من تتابعه ولا يتابعك. اضغط «فتح» ثم ألغِ المتابعة يدويا.</span></div></li>
-</ol>
-</section>
-
-<section id="tool" class="card" aria-labelledby="h-tool">
-<h2 id="h-tool">ابدأ المقارنة</h2>
-<p>الملفات تُقرأ داخل هاتفك فقط ولا تُرفع إلى أي مكان.</p>
-<div class="drop">
-<label>ملف zip الكامل <input id="fz" type="file" accept=".zip"></label>
-<div class="or">أو اختر الملفين بعد الاستخراج</div>
-<label>followers_1.json <input id="f1" type="file" accept=".json" multiple></label>
-<label>following.json <input id="f2" type="file" accept=".json"></label>
-<button id="go" disabled>قارن</button>
-</div>
-<div id="err" role="alert"></div>
-<div id="res" hidden>
-<div class="stats">
-<div><b id="cFollowing">0</b><small>تتابعهم</small></div>
-<div><b id="cFollowers">0</b><small>يتابعونك</small></div>
-<div><b id="cNon">0</b><small>لا يتابعونك</small></div>
-</div>
-<input id="q" type="search" placeholder="ابحث عن حساب" aria-label="بحث">
-<div id="list"></div>
-<p class="tip">ضع علامة ✓ على من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.</p>
-</div>
-</section>
-
-<section>
-<details>
-<summary>شرح مفصل لتنزيل البيانات من إنستغرام</summary>
-<ol>
-<li>افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.</li>
-<li>اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.</li>
-<li>اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.</li>
-<li>اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.</li>
-<li>اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.</li>
-<li>انتظر الإشعار أو البريد، ونزّل ملف zip.</li>
-</ol>
-<p class="tip">أسماء الأزرار قد تختلف قليلا حسب اللغة والنسخة. المهم: المتابعون والمتابَعون فقط، وبصيغة JSON.</p>
-</details>
-</section>
-
-<footer><p><a href="about.html">من نحن</a> · <a href="contact.html">اتصل بنا</a> · <a href="privacy.html">سياسة الخصوصية</a></p>
-<p><a href="guide-export.html">تحميل بياناتك</a> · <a href="guide-use.html">طريقة الاستعمال</a> · <a href="guide-safe.html">نصائح الأمان</a></p>
-<p>Unfollow Radar غير تابع لإنستغرام أو Meta.</p>
-<!-- مكان الإعلان: ضع كود AdSense هنا بعد الموافقة -->
-</footer>
-</main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script>
-const $=id=>document.getElementById(id);
-let non=[],done=new Set();
-try{done=new Set(JSON.parse(localStorage.getItem('done')||'[]'))}catch(e){}
-const save=()=>{try{localStorage.setItem('done',JSON.stringify([...done]))}catch(e){}};
-const read=f=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>{try{ok(JSON.parse(r.result))}catch(e){ko(new Error('ملف غير صالح: '+f.name))}};r.onerror=()=>ko(new Error('تعذر قراءة '+f.name));r.readAsText(f)});
-function names(data){
-  let arr=Array.isArray(data)?data:(data.relationships_following||data.relationships_followers||[]);
-  const out=[];
-  for(const e of arr){
-    const s=(e.string_list_data&&e.string_list_data[0])||{};
-    const u=(s.value||e.title||'').trim();
-    if(u)out.push(u.toLowerCase());
-  }
-  return out;
-}
-const upd=()=>{$('go').disabled=!($('fz').files.length||($('f1').files.length&&$('f2').files.length))};
-$('f1').onchange=upd;$('f2').onchange=upd;$('fz').onchange=upd;
-async function load(){
-  const fl=new Set();let fg=[];
-  if($('fz').files.length){
-    if(typeof JSZip==='undefined')throw new Error('تعذر تحميل مكتبة zip. تأكد من الإنترنت أو استخرج الملفين واخترهما.');
-    const z=await JSZip.loadAsync($('fz').files[0]);
-    let found=false;
-    for(const n of Object.keys(z.files)){
-      const base=n.split('/').pop();
-      if(/^followers_\d+\.json$/.test(base)){names(JSON.parse(await z.files[n].async('string'))).forEach(x=>fl.add(x));found=true}
-      else if(base==='following.json'){fg=names(JSON.parse(await z.files[n].async('string')));found=true}
-    }
-    if(!found)throw new Error('لم أجد ملفات followers وfollowing داخل الـ zip. تأكد أنك اخترت JSON وأن البيانات تشمل المتابعين والمتابَعين.');
-  }else{
-    for(const f of $('f1').files)names(await read(f)).forEach(n=>fl.add(n));
-    fg=names(await read($('f2').files[0]));
-  }
-  return {fl,fg};
-}
-$('go').onclick=async()=>{
-  $('err').textContent='';
-  try{
-    const {fl,fg}=await load();
-    if(!fl.size||!fg.length)throw new Error('لم أجد أي حسابات. تأكد أنك اخترت الملفين الصحيحين.');
-    non=[...new Set(fg)].filter(n=>!fl.has(n)).sort();
-    $('cFollowing').textContent=new Set(fg).size;
-    $('cFollowers').textContent=fl.size;
-    $('cNon').textContent=non.length;
-    $('res').hidden=false;
-    render();
-  }catch(e){$('err').textContent=e.message||'حدث خطأ. حاول مرة أخرى.'}
-};
-function render(){
-  const q=$('q').value.trim().toLowerCase();
-  const box=$('list');box.innerHTML='';
-  const items=non.filter(n=>n.includes(q));
-  if(!items.length){box.innerHTML='<div class="empty">لا توجد نتائج.</div>';return}
-  for(const n of items){
-    const r=document.createElement('div');r.className='row'+(done.has(n)?' done':'');
-    const c=document.createElement('input');c.type='checkbox';c.checked=done.has(n);c.setAttribute('aria-label','تم: '+n);
-    c.onchange=()=>{c.checked?done.add(n):done.delete(n);save();r.classList.toggle('done',c.checked)};
-    const s=document.createElement('span');s.className='n';s.textContent=n;
-    const a=document.createElement('a');a.href='https://www.instagram.com/'+encodeURIComponent(n)+'/';a.target='_blank';a.rel='noopener';a.textContent='فتح';
-    r.append(c,s,a);box.append(r);
-  }
-}
-$('q').oninput=render;
+// ضع هنا معرّف فيديو يوتيوب (مثال: 'dQw4w9WgXcQ') أو مسار ملف مثل 'tuto.mp4'
+const VIDEO='';
+(function(){if(!VIDEO)return;let e;
+if(/\.(mp4|webm)$/i.test(VIDEO)){e=document.createElement('video');e.src=VIDEO;e.controls=true;e.playsInline=true;e.preload='metadata'}
+else{e=document.createElement('iframe');e.src='https://www.youtube-nocookie.com/embed/'+VIDEO;e.allowFullscreen=true;e.title='Video'}
+e.style.cssText='width:100%;aspect-ratio:16/9;border:0;display:block';$('vbox').append(e);$('vid').hidden=false})();
+const GT=lsg('gt')==='1';
+$('lang').value=GT?'other':L;
+apply();
+if(GT)loadGT();
 </script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>
-402  </html>
