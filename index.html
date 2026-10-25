@@ -64,6 +64,8 @@ body{top:0!important}
 .star{background:none;color:var(--amb);padding:2px 8px;font-size:20px;line-height:1}.row.wl{opacity:.6}
 .lost{margin-top:12px;font-size:14px;padding:12px 14px;background:var(--bg)}.lost .ln{direction:ltr;color:var(--mute);margin-top:6px;word-break:break-word}
 html[dir=rtl] .row .n{text-align:right}html[dir=ltr] .row .n{text-align:left}
+.share{text-align:center}.share .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.share button{padding:12px 20px}.share .alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s}#toast.on{opacity:1}
 </style>
 </head>
 <body>
@@ -133,6 +135,11 @@ html[dir=rtl] .row .n{text-align:right}html[dir=ltr] .row .n{text-align:left}
 <p class="tip" data-i="dt"></p>
 </details>
 </section>
+<section class="share" aria-labelledby="h-share">
+<h2 id="h-share" data-i="shT"></h2>
+<div class="btns"><button type="button" id="btnShare" data-i="shB"></button><button type="button" id="btnCopy" class="alt" data-i="cpB"></button></div>
+</section>
+<div id="toast" role="status" aria-live="polite"></div>
 <footer><p><a href="about.html" data-i="ab"></a> · <a href="contact.html" data-i="ct"></a> · <a href="privacy.html" data-i="pv"></a></p>
 <p><a href="guide-export.html" data-i="g1"></a> · <a href="guide-use.html" data-i="g2"></a> · <a href="guide-safe.html" data-i="g3"></a></p>
 <p data-i="dc"></p>
@@ -154,7 +161,7 @@ tip:"ضع علامة ✓ على من انتهيت منه. تجنب إلغاء ع
 ds:"شرح مفصل لتنزيل البيانات من إنستغرام",
 d1:"افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.",d2:"اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.",d3:"اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.",d4:"اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.",d5:"اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.",d6:"انتظر الإشعار أو البريد، ونزّل ملف zip.",
 dt:"أسماء الأزرار قد تختلف قليلا حسب اللغة والنسخة. المهم: المتابعون والمتابَعون فقط، وبصيغة JSON.",
-pv:"سياسة الخصوصية",dc:"Unfollow Radar غير تابع لإنستغرام أو Meta.",
+pv:"سياسة الخصوصية",shT:"شارك الأداة مع أصدقائك",shB:"📤 شارك",cpB:"🔗 نسخ الرابط",cpd:"تم نسخ الرابط ✅",shX:"اعرف من لا يتابعك فإنستغرام بدون كلمة سر",dc:"Unfollow Radar غير تابع لإنستغرام أو Meta.",
 eJ:"ملف غير صالح: {a}",eR:"تعذر قراءة {a}",eZ:"تعذر تحميل مكتبة zip. تأكد من الإنترنت أو استخرج الملفين واخترهما.",eF:"لم أجد ملفات followers وfollowing داخل الـ zip. تأكد أنك اخترت JSON وأن البيانات تشمل المتابعين والمتابَعين.",eN:"لم أجد أي حسابات. تأكد أنك اخترت الملفين الصحيحين.",eG:"حدث خطأ. حاول مرة أخرى.",nr:"لا توجد نتائج.",dn:"تم: ",op:"فتح",ot:"🌐 لغات أخرى (يتطلب إنترنت)",eO:"لغات أخرى تتطلب اتصالا بالإنترنت."},
 fr:{vh:"Vidéo explicative",ab:"À propos",ct:"Contact",g1:"Télécharger vos données",g2:"Mode d'emploi",g3:"Conseils de sécurité",md:"Découvrez qui vous suivez sans réciprocité grâce à deux fichiers de données Instagram, sans mot de passe.",sv:"Personne perplexe qui se gratte la tête",hp:"Vous vous demandez qui ne vous suit pas en retour ? Importez deux fichiers de vos données Instagram et on les trouve en quelques secondes, sans mot de passe.",cta:"Commencer",hh:"Comment ça marche en 4 étapes",
 s1t:"Demandez vos données à Instagram",s1d:"Paramètres, puis Centre de comptes, puis Télécharger vos informations. Choisissez uniquement Followers et Abonnements, au format JSON.",
@@ -167,7 +174,7 @@ tip:"Cochez ✓ ceux que vous avez traités. Évitez d'en retirer beaucoup d'un 
 ds:"Guide détaillé pour télécharger les données Instagram",
 d1:"Ouvrez Instagram, touchez votre photo de profil puis ☰.",d2:"Choisissez <b>Paramètres et confidentialité</b> puis <b>Centre de comptes</b>.",d3:"Touchez <b>Vos informations et autorisations</b> puis <b>Télécharger vos informations</b>.",d4:"Choisissez votre compte puis <b>Une partie de vos informations</b>, et cochez uniquement <b>Followers et abonnements</b>.",d5:"Choisissez <b>Exporter vers l'appareil</b>, le format <b>JSON</b>, la période <b>Depuis toujours</b>, puis <b>Lancer l'exportation</b>.",d6:"Attendez la notification ou l'e-mail, puis téléchargez le zip.",
 dt:"Les noms des boutons peuvent varier selon la langue et la version. L'essentiel : uniquement followers et abonnements, au format JSON.",
-pv:"Politique de confidentialité",dc:"Unfollow Radar n'est affilié ni à Instagram ni à Meta.",
+pv:"Politique de confidentialité",shT:"Partagez l'outil avec vos amis",shB:"📤 Partager",cpB:"🔗 Copier le lien",cpd:"Lien copié ✅",shX:"Découvrez qui ne vous suit pas sur Instagram, sans mot de passe",dc:"Unfollow Radar n'est affilié ni à Instagram ni à Meta.",
 eJ:"Fichier invalide : {a}",eR:"Impossible de lire {a}",eZ:"Impossible de charger la bibliothèque zip. Vérifiez votre connexion ou extrayez les deux fichiers et choisissez-les.",eF:"Aucun fichier followers ou following dans le zip. Vérifiez que vous avez choisi JSON et que les données incluent followers et abonnements.",eN:"Aucun compte trouvé. Vérifiez que vous avez choisi les bons fichiers.",eG:"Une erreur est survenue. Réessayez.",nr:"Aucun résultat.",dn:"Fait : ",op:"Ouvrir",ot:"🌐 Autres langues (Internet requis)",eO:"Les autres langues nécessitent une connexion Internet."},
 en:{vh:"Tutorial video",ab:"About",ct:"Contact us",g1:"Download your data",g2:"How to use",g3:"Safety tips",md:"Find who you follow that doesn't follow you back, using two Instagram data files, no password needed.",sv:"A puzzled person scratching their head",hp:"Wondering who doesn't follow you back? Upload two files from your Instagram data and we'll find them in seconds, no password needed.",cta:"Get started",hh:"How it works in 4 steps",
 s1t:"Request your data from Instagram",s1d:"Settings, then Accounts Center, then Download your information. Choose followers and following only, in JSON format.",
@@ -180,7 +187,7 @@ tip:"Tick ✓ the ones you're done with. Avoid unfollowing many accounts in a sh
 ds:"Detailed guide to download your Instagram data",
 d1:"Open Instagram, tap your profile picture then ☰.",d2:"Choose <b>Settings and privacy</b> then <b>Accounts Center</b>.",d3:"Tap <b>Your information and permissions</b> then <b>Download your information</b>.",d4:"Choose your account then <b>Some of your information</b>, and tick only <b>Followers and following</b>.",d5:"Choose <b>Export to device</b>, format <b>JSON</b>, date range <b>All time</b>, then <b>Start export</b>.",d6:"Wait for the notification or email, then download the zip.",
 dt:"Button names may vary slightly by language and version. What matters: followers and following only, in JSON format.",
-pv:"Privacy policy",dc:"Unfollow Radar is not affiliated with Instagram or Meta.",
+pv:"Privacy policy",shT:"Share the tool with your friends",shB:"📤 Share",cpB:"🔗 Copy link",cpd:"Link copied ✅",shX:"Find who does not follow you back on Instagram, no password needed",dc:"Unfollow Radar is not affiliated with Instagram or Meta.",
 eJ:"Invalid file: {a}",eR:"Could not read {a}",eZ:"Could not load the zip library. Check your connection or extract the two files and pick them.",eF:"No followers or following files found in the zip. Make sure you chose JSON and that the data includes followers and following.",eN:"No accounts found. Make sure you picked the right files.",eG:"Something went wrong. Please try again.",nr:"No results.",dn:"Done: ",op:"Open",ot:"🌐 Other languages (needs internet)",eO:"Other languages need an internet connection."}
 };
 const lsg=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
@@ -311,6 +318,26 @@ const GT=lsg('gt')==='1';
 $('lang').value=GT?'other':L;
 apply();
 if(GT)loadGT();
+(function(){
+  const url=location.origin+location.pathname;
+  let tt;
+  function toast(m){const e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2200)}
+  function fallback(){
+    const i=document.createElement('input');i.value=url;document.body.appendChild(i);i.select();
+    try{document.execCommand('copy');toast(t('cpd'))}catch(e){}
+    i.remove();
+  }
+  function copyLink(){
+    if(navigator.clipboard&&window.isSecureContext){
+      navigator.clipboard.writeText(url).then(()=>toast(t('cpd'))).catch(fallback);
+    }else fallback();
+  }
+  $('btnCopy').onclick=copyLink;
+  $('btnShare').onclick=()=>{
+    if(navigator.share)navigator.share({title:'Unfollow Radar',text:t('shX'),url}).catch(()=>{});
+    else copyLink();
+  };
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
