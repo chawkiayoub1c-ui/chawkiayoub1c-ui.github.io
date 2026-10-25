@@ -60,6 +60,9 @@ footer{margin-top:36px;text-align:center;font-size:14px;color:var(--mute)}
 #lang{font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 #gt{margin-top:8px;text-align:center}
 body{top:0!important}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.pg{flex:1;color:var(--mute);font-size:14px;min-width:90px}.tools button{padding:8px 14px;font-size:14px}.chk{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--mute)}.chk input{width:18px;height:18px;accent-color:var(--acc)}
+.star{background:none;color:var(--amb);padding:2px 8px;font-size:20px;line-height:1}.row.wl{opacity:.6}
+.lost{margin-top:12px;font-size:14px;padding:12px 14px;background:var(--bg)}.lost .ln{direction:ltr;color:var(--mute);margin-top:6px;word-break:break-word}
 html[dir=rtl] .row .n{text-align:right}html[dir=ltr] .row .n{text-align:left}
 </style>
 </head>
@@ -112,7 +115,10 @@ html[dir=rtl] .row .n{text-align:right}html[dir=ltr] .row .n{text-align:left}
 <div><b id="cFollowing">0</b><small data-i="c1"></small></div>
 <div><b id="cFollowers">0</b><small data-i="c2"></small></div>
 <div><b id="cNon">0</b><small data-i="c3"></small></div>
+<div><b id="cFans">0</b><small data-i="c4"></small></div>
 </div>
+<div id="lost" class="card lost" hidden></div>
+<div class="tools"><label class="chk"><input id="shw" type="checkbox"><span data-i="sh"></span></label><span id="pg" class="pg"></span><button id="ex" type="button" data-i="ex"></button></div>
 <input id="q" type="search" data-ph="sp" data-al="sa">
 <div id="list" translate="no"></div>
 <p class="tip" data-i="tip"></p>
@@ -143,7 +149,7 @@ s2t:"نزّل ملف zip",s2d:"سيصلك إشعار أو بريد عندما ي
 s3t:"ارفعه هنا",s3d:"اختر ملف zip كما هو، أو الملفين followers_1.json وfollowing.json بعد الاستخراج.",
 s4t:"شاهد النتيجة",s4d:"تظهر قائمة من تتابعه ولا يتابعك. اضغط «فتح» ثم ألغِ المتابعة يدويا.",
 th:"ابدأ المقارنة",tp:"الملفات تُقرأ داخل هاتفك فقط ولا تُرفع إلى أي مكان.",lz:"ملف zip الكامل",or:"أو اختر الملفين بعد الاستخراج",go:"قارن",
-c1:"تتابعهم",c2:"يتابعونك",c3:"لا يتابعونك",sp:"ابحث عن حساب",sa:"بحث",
+c1:"تتابعهم",c2:"يتابعونك",c3:"لا يتابعونك",c4:"لا تتابعهم",pt:"استثناء (لن يظهر في القائمة)",sh:"عرض المستثنين",pg:"تم {a} من {b}",ex:"تصدير CSV",lo:"توقفوا عن متابعتك منذ آخر مقارنة",sp:"ابحث عن حساب",sa:"بحث",
 tip:"ضع علامة ✓ على من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.",
 ds:"شرح مفصل لتنزيل البيانات من إنستغرام",
 d1:"افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.",d2:"اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.",d3:"اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.",d4:"اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.",d5:"اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.",d6:"انتظر الإشعار أو البريد، ونزّل ملف zip.",
@@ -156,7 +162,7 @@ s2t:"Téléchargez le fichier zip",s2d:"Vous recevrez une notification ou un e-m
 s3t:"Importez-le ici",s3d:"Choisissez le zip tel quel, ou les deux fichiers followers_1.json et following.json après extraction.",
 s4t:"Voyez le résultat",s4d:"La liste de ceux que vous suivez sans réciprocité s'affiche. Appuyez sur « Ouvrir » puis désabonnez-vous manuellement.",
 th:"Lancer la comparaison",tp:"Les fichiers sont lus uniquement dans votre téléphone et ne sont envoyés nulle part.",lz:"Fichier zip complet",or:"ou choisissez les deux fichiers après extraction",go:"Comparer",
-c1:"Abonnements",c2:"Abonnés",c3:"Ne vous suivent pas",sp:"Rechercher un compte",sa:"Recherche",
+c1:"Abonnements",c2:"Abonnés",c3:"Ne vous suivent pas",c4:"Vous ne les suivez pas",pt:"Exclure (ne plus afficher)",sh:"Afficher les exclus",pg:"Fait : {a} sur {b}",ex:"Exporter en CSV",lo:"Ont arrêté de vous suivre depuis la dernière comparaison",sp:"Rechercher un compte",sa:"Recherche",
 tip:"Cochez ✓ ceux que vous avez traités. Évitez d'en retirer beaucoup d'un coup pour qu'Instagram ne limite pas votre compte.",
 ds:"Guide détaillé pour télécharger les données Instagram",
 d1:"Ouvrez Instagram, touchez votre photo de profil puis ☰.",d2:"Choisissez <b>Paramètres et confidentialité</b> puis <b>Centre de comptes</b>.",d3:"Touchez <b>Vos informations et autorisations</b> puis <b>Télécharger vos informations</b>.",d4:"Choisissez votre compte puis <b>Une partie de vos informations</b>, et cochez uniquement <b>Followers et abonnements</b>.",d5:"Choisissez <b>Exporter vers l'appareil</b>, le format <b>JSON</b>, la période <b>Depuis toujours</b>, puis <b>Lancer l'exportation</b>.",d6:"Attendez la notification ou l'e-mail, puis téléchargez le zip.",
@@ -169,7 +175,7 @@ s2t:"Download the zip file",s2d:"You'll get a notification or email when it's re
 s3t:"Upload it here",s3d:"Pick the zip as is, or the two files followers_1.json and following.json after extracting.",
 s4t:"See the result",s4d:"A list of people you follow who don't follow you back appears. Tap \"Open\" then unfollow manually.",
 th:"Start the comparison",tp:"Files are read inside your phone only and are never uploaded anywhere.",lz:"Full zip file",or:"or pick the two files after extracting",go:"Compare",
-c1:"Following",c2:"Followers",c3:"Don't follow back",sp:"Search for an account",sa:"Search",
+c1:"Following",c2:"Followers",c3:"Don't follow back",c4:"You don't follow back",pt:"Protect (hide from list)",sh:"Show protected",pg:"Done: {a} of {b}",ex:"Export CSV",lo:"Stopped following you since last comparison",sp:"Search for an account",sa:"Search",
 tip:"Tick ✓ the ones you're done with. Avoid unfollowing many accounts in a short time so Instagram doesn't limit your account.",
 ds:"Detailed guide to download your Instagram data",
 d1:"Open Instagram, tap your profile picture then ☰.",d2:"Choose <b>Settings and privacy</b> then <b>Accounts Center</b>.",d3:"Tap <b>Your information and permissions</b> then <b>Download your information</b>.",d4:"Choose your account then <b>Some of your information</b>, and tick only <b>Followers and following</b>.",d5:"Choose <b>Export to device</b>, format <b>JSON</b>, date range <b>All time</b>, then <b>Start export</b>.",d6:"Wait for the notification or email, then download the zip.",
@@ -181,7 +187,9 @@ const lsg=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lss=(k,v
 let L=lsg('lang');if(!T[L])L=(navigator.language||'ar').slice(0,2);if(!T[L])L='ar';
 const t=k=>T[L][k]||T.en[k]||k;
 class E extends Error{constructor(k,a){super(k);this.k=k;this.a=a}}
-let non=[],done=new Set(),lastErr=null;
+let non=[],done=new Set(),lastErr=null,lostArr=[],wl=new Set();
+try{wl=new Set(JSON.parse(lsg('wl')||'[]'))}catch(e){}
+const saveW=()=>lss('wl',JSON.stringify([...wl]));
 try{done=new Set(JSON.parse(lsg('done')||'[]'))}catch(e){}
 const save=()=>lss('done',JSON.stringify([...done]));
 const msg=e=>e&&e.k?t(e.k).replace('{a}',e.a||''):t('eG');
@@ -193,6 +201,7 @@ function apply(){
   $('md').content=t('md');
   $('err').textContent=lastErr?msg(lastErr):'';
   if(non.length)render();
+  renderLost();
 }
 function loadGT(){
   if(window.google&&google.translate)return;
@@ -243,29 +252,55 @@ $('go').onclick=async()=>{
   try{
     const {fl,fg}=await load();
     if(!fl.size||!fg.length)throw new E('eN');
-    non=[...new Set(fg)].filter(n=>!fl.has(n)).sort();
-    $('cFollowing').textContent=new Set(fg).size;
+    const fgs=new Set(fg);
+    non=[...fgs].filter(n=>!fl.has(n)).sort();
+    $('cFollowing').textContent=fgs.size;
     $('cFollowers').textContent=fl.size;
-    $('cNon').textContent=non.length;
+    $('cFans').textContent=[...fl].filter(n=>!fgs.has(n)).length;
+    let pv=null;try{pv=JSON.parse(lsg('prev')||'null')}catch(e){}
+    lostArr=(pv&&pv.f)?pv.f.filter(n=>!fl.has(n)):[];
+    lss('prev',JSON.stringify({f:[...fl]}));
+    renderLost();
     $('res').hidden=false;
     render();
   }catch(e){lastErr=e;$('err').textContent=msg(e)}
 };
+function prog(){
+  const act=non.filter(n=>!wl.has(n));
+  $('cNon').textContent=act.length;
+  $('pg').textContent=t('pg').replace('{a}',act.filter(n=>done.has(n)).length).replace('{b}',act.length);
+}
+function renderLost(){
+  const b=$('lost');
+  if(!lostArr.length){b.hidden=true;return}
+  b.innerHTML='<b>'+t('lo')+' ('+lostArr.length+')</b><div class="ln"></div>';
+  b.querySelector('.ln').textContent=lostArr.join(' · ');b.hidden=false;
+}
 function render(){
   const q=$('q').value.trim().toLowerCase();
   const box=$('list');box.innerHTML='';
-  const items=non.filter(n=>n.includes(q));
+  const items=non.filter(n=>n.includes(q)&&($('shw').checked||!wl.has(n)));
+  prog();
   if(!items.length){box.innerHTML='<div class="empty">'+t('nr')+'</div>';return}
   for(const n of items){
-    const r=document.createElement('div');r.className='row'+(done.has(n)?' done':'');
+    const r=document.createElement('div');r.className='row'+(done.has(n)?' done':'')+(wl.has(n)?' wl':'');
     const c=document.createElement('input');c.type='checkbox';c.checked=done.has(n);c.setAttribute('aria-label',t('dn')+n);
-    c.onchange=()=>{c.checked?done.add(n):done.delete(n);save();r.classList.toggle('done',c.checked)};
+    c.onchange=()=>{c.checked?done.add(n):done.delete(n);save();r.classList.toggle('done',c.checked);prog()};
     const s=document.createElement('span');s.className='n';s.textContent=n;
+    const w=document.createElement('button');w.type='button';w.className='star';w.textContent=wl.has(n)?'★':'☆';w.title=t('pt');w.setAttribute('aria-label',t('pt')+': '+n);
+    w.onclick=()=>{wl.has(n)?wl.delete(n):wl.add(n);saveW();render()};
     const a=document.createElement('a');a.href='https://www.instagram.com/'+encodeURIComponent(n)+'/';a.target='_blank';a.rel='noopener';a.textContent=t('op');
-    r.append(c,s,a);box.append(r);
+    r.append(c,s,w,a);box.append(r);
   }
 }
 $('q').oninput=render;
+$('shw').onchange=render;
+$('ex').onclick=()=>{
+  const rows=['username,profile,status'].concat(non.filter(n=>!wl.has(n)).map(n=>n+',https://www.instagram.com/'+n+'/,'+(done.has(n)?'done':'todo')));
+  const b=new Blob(['\ufeff'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='unfollow-radar.csv';document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+};
 // ضع هنا معرّف فيديو يوتيوب (مثال: 'dQw4w9WgXcQ') أو مسار ملف مثل 'tuto.mp4'
 const VIDEO='';
 (function(){if(!VIDEO)return;let e;
