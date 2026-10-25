@@ -1,34 +1,54 @@
-const CACHE = 'radar-v1';
-const FILES = ['./', 'index.html', 'privacy.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
-const SKIP = ['googlesyndication', 'doubleclick', 'googleadservices', 'adtrafficquality'];
+const CACHE = 'unfollow-radar-v3';
+const FILES = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './privacy.html'
+];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', e => {
+self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', e => {
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET' || SKIP.some(s => req.url.includes(s))) return;
-  e.respondWith(
-    caches.match(req).then(cached => {
-      const net = fetch(req).then(res => {
-        if (res && (res.ok || res.type === 'opaque')) {
+  if (req.method !== 'GET') return;
+
+  // Ignore external requests (Google Translate, video, AdSense...)
+  if (new URL(req.url).origin !== self.location.origin) return;
+
+  // Pages: network first (so updates arrive), cache as fallback offline
+  if (req.mode === 'navigate') {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
-        }
-        return res;
-      }).catch(() => cached || caches.match('index.html'));
-      return cached || net;
-    })
+          caches.open(CACHE).then((c) => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then((r) => r || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Other files: cache first
+  e.respondWith(
+    caches.match(req).then((r) => r || fetch(req).then((res) => {
+      const copy = res.clone();
+      caches.open(CACHE).then((c) => c.put(req, copy));
+      return res;
+    }))
   );
 });
