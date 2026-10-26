@@ -40,7 +40,42 @@
   .empty{margin:auto;color:var(--muted);text-align:center;line-height:1.8}
   form{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
   input{flex:1;min-width:0;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  @media (prefers-reduced-motion:no-preference){ .m{animation:in .15s ease-out} }
+  .m{position:relative;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+  .m .more{position:absolute;top:2px;inset-inline-end:4px;background:transparent;color:inherit;opacity:.45;padding:0 6px;font-size:1.05rem;line-height:1.4;border-radius:8px}
+  .m .more:hover,.m .more:focus-visible{opacity:1}
+  .m .txt{display:block;padding-inline-end:14px;white-space:pre-wrap}
+  .quote{display:block;width:100%;text-align:start;background:rgba(0,0,0,.18);color:inherit;font-weight:400;
+         border:0;border-inline-start:3px solid rgba(255,255,255,.55);border-radius:8px;padding:4px 8px;margin-bottom:5px;font-size:.82rem}
+  .m.me .quote{border-inline-start-color:rgba(42,27,0,.6);background:rgba(42,27,0,.12)}
+  .quote b{display:block;font-size:.74rem;opacity:.85}
+  .quote span{display:block;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rx{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+  .rx button{padding:1px 8px;font-size:.85rem;font-weight:500;border-radius:999px;background:rgba(0,0,0,.2);color:inherit;border:1px solid transparent}
+  .m.me .rx button{background:rgba(42,27,0,.14)}
+  .rx button.mine{border-color:currentColor}
+  .m.flash{outline:2px solid var(--mine);outline-offset:2px}
+  #replybar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border-top:1px solid var(--line);font-size:.85rem}
+  #replybar[hidden]{display:none}
+  #replybar div{flex:1;min-width:0;border-inline-start:3px solid var(--mine);padding-inline-start:8px;color:var(--muted)}
+  #replybar b{display:block;color:var(--text);font-size:.8rem}
+  #replybar span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #replybar button{padding:4px 10px}
+  #epanel{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px 10px;background:var(--surface);border-top:1px solid var(--line)}
+  #epanel[hidden]{display:none}
+  #epanel button{background:transparent;font-size:1.4rem;padding:6px 0;border-radius:8px;min-height:44px}
+  #emoji{padding:9px 12px;font-size:1.1rem;line-height:1}
+  #sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,10,20,.6)}
+  #sheet[hidden]{display:none}
+  #sheet .card{width:100%;max-width:520px;background:var(--surface);border-radius:18px 18px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+               display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-bottom:0}
+  #sheet .emo{display:flex;justify-content:space-between;gap:4px;margin-bottom:6px}
+  #sheet .emo button{background:var(--bg);font-size:1.6rem;padding:8px 0;flex:1;min-height:48px}
+  #sheet .emo button.on{outline:2px solid var(--mine)}
+  #sheet .act{background:transparent;color:var(--text);text-align:start;font-weight:500;padding:14px 12px;border-radius:10px}
+  #sheet .act:hover,#sheet .act:focus-visible{background:var(--bg)}
+  #sheet .act.danger{color:#ff9b9b}
+  @media (prefers-reduced-motion:no-preference){ .m{animation:in .15s ease-out} #sheet .card{animation:up .18s ease-out} }
+  @keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
   @keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 </style>
 </head>
@@ -63,18 +98,33 @@
   <div id="rooms"></div>
   <div id="bar"><b id="title">الغرفة العامة</b><button id="code" class="ghost" style="display:none">نسخ رمز الدعوة</button></div>
   <div id="msgs"></div>
+  <div id="replybar" hidden>
+    <div><b id="rb-name"></b><span id="rb-text"></span></div>
+    <button id="rb-x" type="button" class="ghost" aria-label="إلغاء الرد">✕</button>
+  </div>
+  <div id="epanel" hidden></div>
   <form id="f" autocomplete="off">
+    <button id="emoji" type="button" class="ghost" aria-label="الرموز التعبيرية" aria-expanded="false">😊</button>
     <input id="t" placeholder="اكتب رسالة" maxlength="1000" aria-label="رسالة">
     <button type="submit">إرسال</button>
   </form>
 </section>
+
+<div id="sheet" hidden>
+  <div class="card" role="dialog" aria-label="خيارات الرسالة">
+    <div class="emo" id="sh-emo"></div>
+    <button class="act" id="sh-reply" type="button">↩ رد</button>
+    <button class="act" id="sh-copy" type="button">نسخ النص</button>
+    <button class="act danger" id="sh-del" type="button">مسح الرسالة</button>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  collection, doc, setDoc, addDoc, updateDoc, arrayUnion, query, where, orderBy, limit, onSnapshot, serverTimestamp }
+  collection, doc, setDoc, addDoc, updateDoc, deleteDoc, deleteField, arrayUnion, query, where, orderBy, limit, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -160,30 +210,170 @@ $("code").onclick = async () => {
 
 function path() { return room.type === "public" ? ["public"] : ["groups", room.id, "messages"]; }
 
+const REACTIONS = ["👍","❤️","😂","😮","😢","🙏"];
+const EMOJIS = ["😀","😂","🤣","😊","😍","🥰","😘","😎","🤔","😅","😭","😡","🥳","😴","🤝","🙏",
+                "👍","👎","👏","🙌","💪","👀","🔥","✨","❤️","💔","🎉","💯","✅","❌","🌹","☕"];
+let stick = true, replying = null, current = null, openedAt = 0;
+
+const msgRef = id => doc(db, ...path(), id);
+const fail = msg => { $("status").className = "off"; $("status").textContent = msg; };
+
 function openRoom(r) {
-  room = r;
+  room = r; stick = true; clearReply(); closeSheet();
   $("title").textContent = r.name;
   $("code").style.display = r.type === "group" ? "" : "none";
   renderRooms();
   if (unsubMsgs) unsubMsgs();
   const q = query(collection(db, ...path()), orderBy("createdAt", "desc"), limit(100));
   unsubMsgs = onSnapshot(q, { includeMetadataChanges: true }, snap => {
-    const box = $("msgs"); box.textContent = "";
-    const list = snap.docs.map(d => ({ ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse();
+    const box = $("msgs");
+    const near = box.scrollHeight - box.scrollTop - box.clientHeight < 140;
+    box.textContent = "";
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse();
     if (!list.length) {
       const e = document.createElement("div"); e.className = "empty"; e.textContent = "لا توجد رسائل بعد. اكتب أول رسالة."; box.appendChild(e);
     }
-    list.forEach(m => {
-      const el = document.createElement("div");
-      el.className = "m" + (m.uid === me.uid ? " me" : "") + (m.pending ? " pending" : "");
-      if (m.uid !== me.uid) { const s = document.createElement("small"); s.textContent = m.name || "مستخدم"; el.appendChild(s); }
-      el.appendChild(document.createTextNode(m.text));
-      box.appendChild(el);
-    });
-    box.scrollTop = box.scrollHeight;
+    list.forEach(m => box.appendChild(renderMsg(m)));
+    if (stick || near) { box.scrollTop = box.scrollHeight; stick = false; }
     setStatus(snap.metadata.fromCache);
   }, err => { $("status").textContent = "لا يمكن قراءة هذه الغرفة: " + err.code; });
 }
+
+function renderMsg(m) {
+  const mine = m.uid === me.uid;
+  const el = document.createElement("div");
+  el.id = "m-" + m.id;
+  el.className = "m" + (mine ? " me" : "") + (m.pending ? " pending" : "");
+  if (!mine) { const s = document.createElement("small"); s.textContent = m.name || "مستخدم"; el.appendChild(s); }
+
+  if (m.replyTo) {
+    const q = document.createElement("button"); q.type = "button"; q.className = "quote";
+    const n = document.createElement("b"); n.textContent = m.replyTo.name || "مستخدم";
+    const t = document.createElement("span"); t.textContent = m.replyTo.text || "";
+    q.append(n, t);
+    q.onclick = () => {
+      const target = document.getElementById("m-" + m.replyTo.id);
+      if (!target) return fail("الرسالة الأصلية لم تعد موجودة.");
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      target.classList.add("flash"); setTimeout(() => target.classList.remove("flash"), 1200);
+    };
+    el.appendChild(q);
+  }
+
+  const txt = document.createElement("span"); txt.className = "txt"; txt.textContent = m.text; el.appendChild(txt);
+
+  const counts = {};
+  Object.values(m.reactions || {}).forEach(e => counts[e] = (counts[e] || 0) + 1);
+  if (Object.keys(counts).length) {
+    const rx = document.createElement("div"); rx.className = "rx";
+    Object.entries(counts).forEach(([e, n]) => {
+      const b = document.createElement("button"); b.type = "button";
+      b.textContent = n > 1 ? e + " " + n : e;
+      if ((m.reactions || {})[me.uid] === e) b.className = "mine";
+      b.setAttribute("aria-label", "تفاعل " + e + " (" + n + ")");
+      b.onclick = () => react(m, e);
+      rx.appendChild(b);
+    });
+    el.appendChild(rx);
+  }
+
+  const more = document.createElement("button"); more.type = "button"; more.className = "more";
+  more.textContent = "⋯"; more.setAttribute("aria-label", "خيارات الرسالة");
+  more.onclick = () => openSheet(m);
+  el.appendChild(more);
+  bindPress(el, m);
+  return el;
+}
+
+/* ---------- ضغطة طويلة / قائمة الرسالة ---------- */
+function bindPress(el, m) {
+  let t = null, sx = 0, sy = 0;
+  const clear = () => { clearTimeout(t); t = null; };
+  el.addEventListener("touchstart", e => {
+    const p = e.touches[0]; sx = p.clientX; sy = p.clientY;
+    t = setTimeout(() => { t = null; if (navigator.vibrate) navigator.vibrate(15); openSheet(m); }, 450);
+  }, { passive: true });
+  el.addEventListener("touchmove", e => {
+    const p = e.touches[0];
+    if (Math.abs(p.clientX - sx) > 10 || Math.abs(p.clientY - sy) > 10) clear();
+  }, { passive: true });
+  el.addEventListener("touchend", clear);
+  el.addEventListener("touchcancel", clear);
+  el.addEventListener("contextmenu", e => { e.preventDefault(); if ($("sheet").hidden) openSheet(m); });
+}
+
+function openSheet(m) {
+  current = m; openedAt = Date.now();
+  const mineReact = (m.reactions || {})[me.uid];
+  const box = $("sh-emo"); box.textContent = "";
+  REACTIONS.forEach(e => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = e;
+    if (mineReact === e) b.className = "on";
+    b.setAttribute("aria-label", "تفاعل " + e);
+    b.onclick = () => { closeSheet(); react(m, e); };
+    box.appendChild(b);
+  });
+  $("sh-del").style.display = m.uid === me.uid ? "" : "none";
+  $("sheet").hidden = false;
+  $("sh-reply").focus();
+}
+function closeSheet() { $("sheet").hidden = true; current = null; }
+$("sheet").addEventListener("click", e => {
+  if (e.target === $("sheet") && Date.now() - openedAt > 350) closeSheet();
+});
+addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+$("sh-reply").onclick = () => { const m = current; closeSheet(); if (m) setReply(m); };
+$("sh-copy").onclick = async () => {
+  const m = current; closeSheet(); if (!m) return;
+  try { await navigator.clipboard.writeText(m.text); } catch { prompt("انسخ النص:", m.text); }
+};
+$("sh-del").onclick = async () => {
+  const m = current; closeSheet();
+  if (!m || m.uid !== me.uid) return;
+  if (!confirm("مسح هذه الرسالة عند الجميع؟")) return;
+  try { await deleteDoc(msgRef(m.id)); }
+  catch (e) { fail("تعذّر مسح الرسالة (" + (e.code || "خطأ") + ")."); }
+};
+
+/* ---------- التفاعل بالرموز ---------- */
+function react(m, emoji) {
+  const key = "reactions." + me.uid;
+  const same = (m.reactions || {})[me.uid] === emoji;
+  updateDoc(msgRef(m.id), { [key]: same ? deleteField() : emoji })
+    .catch(e => fail("تعذّر إضافة التفاعل (" + (e.code || "خطأ") + ")."));
+}
+
+/* ---------- الرد على رسالة ---------- */
+function setReply(m) {
+  replying = { id: m.id, name: m.name || "مستخدم", text: (m.text || "").slice(0, 80) };
+  $("rb-name").textContent = replying.name;
+  $("rb-text").textContent = replying.text;
+  $("replybar").hidden = false;
+  $("t").focus();
+}
+function clearReply() { replying = null; $("replybar").hidden = true; }
+$("rb-x").onclick = clearReply;
+
+/* ---------- الرموز التعبيرية في الكتابة ---------- */
+(() => {
+  const p = $("epanel");
+  EMOJIS.forEach(e => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = e;
+    b.setAttribute("aria-label", e);
+    b.onclick = () => {
+      const i = $("t"), a = i.selectionStart ?? i.value.length, z = i.selectionEnd ?? a;
+      if (i.value.length + e.length > i.maxLength) return;
+      i.value = i.value.slice(0, a) + e + i.value.slice(z);
+      i.focus(); i.setSelectionRange(a + e.length, a + e.length);
+    };
+    p.appendChild(b);
+  });
+  $("emoji").onclick = () => {
+    p.hidden = !p.hidden;
+    $("emoji").setAttribute("aria-expanded", String(!p.hidden));
+  };
+})();
 
 /* ---------- الإرسال ---------- */
 $("f").onsubmit = e => {
@@ -191,10 +381,12 @@ $("f").onsubmit = e => {
   const text = $("t").value.trim();
   if (!text) return;
   $("t").value = "";
+  const data = { text, uid: me.uid, name: me.displayName || "مستخدم", createdAt: serverTimestamp() };
+  if (replying) data.replyTo = replying;
+  clearReply(); stick = true;
   // بدون await: عند انقطاع الإنترنت تُحفظ الرسالة محليًا وتُرسل لاحقًا
-  addDoc(collection(db, ...path()), {
-    text, uid: me.uid, name: me.displayName || "مستخدم", createdAt: serverTimestamp()
-  }).catch(() => { $("status").textContent = "تعذّر إرسال الرسالة. ليس لديك صلاحية في هذه الغرفة."; });
+  addDoc(collection(db, ...path()), data)
+    .catch(() => { $("status").textContent = "تعذّر إرسال الرسالة. ليس لديك صلاحية في هذه الغرفة."; });
 };
 
 /* ---------- حالة الاتصال ---------- */
