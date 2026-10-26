@@ -75,6 +75,24 @@
   #sheet .act:hover,#sheet .act:focus-visible{background:var(--bg)}
   #sheet .act.danger{color:#ff9b9b}
   #rooms .dm{border-color:#4f7cc4}
+  form[hidden]{display:none}
+  #mic{padding:9px 12px;font-size:1.1rem;line-height:1}
+  #recbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
+  #recbar[hidden]{display:none}
+  #recbar b{flex:1;font-variant-numeric:tabular-nums}
+  #recbar .dot{width:10px;height:10px;border-radius:50%;background:#ff5d5d}
+  @media (prefers-reduced-motion:no-preference){ #recbar .dot{animation:blink 1s infinite} }
+  @keyframes blink{50%{opacity:.2}}
+  .m audio{display:block;width:230px;max-width:100%;height:40px;margin-top:2px}
+  .m .dur{display:block;font-size:.72rem;opacity:.7;margin-top:2px}
+  #review{display:flex;flex-direction:column;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
+  #review[hidden]{display:none}
+  #review audio{width:100%;height:40px}
+  #review .row{display:flex;gap:8px}
+  #review .row button:last-child{flex:1}
+  #fxrow{display:flex;flex-wrap:wrap;gap:6px}
+  #fxrow .chip{background:var(--bg);color:var(--text);border:1px solid var(--line);font-weight:500;padding:7px 12px}
+  #fxrow .chip.on{background:var(--mine);color:var(--mine-text);border-color:var(--mine)}
   #finder{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,10,20,.6)}
   #finder[hidden]{display:none}
   #finder .card{width:100%;max-width:520px;max-height:80dvh;overflow-y:auto;background:var(--surface);border-radius:18px 18px 0 0;
@@ -115,8 +133,22 @@
   <form id="f" autocomplete="off">
     <button id="emoji" type="button" class="ghost" aria-label="الرموز التعبيرية" aria-expanded="false">😊</button>
     <input id="t" placeholder="اكتب رسالة" maxlength="1000" aria-label="رسالة">
+    <button id="mic" type="button" class="ghost" aria-label="تسجيل رسالة صوتية">🎤</button>
     <button type="submit">إرسال</button>
   </form>
+  <div id="recbar" hidden>
+    <button id="rc-x" type="button" class="ghost" aria-label="إلغاء التسجيل">🗑</button>
+    <span class="dot"></span><b id="rtime">0:00</b>
+    <button id="rc-ok" type="button">إيقاف ⏹</button>
+  </div>
+  <div id="review" hidden>
+    <audio id="rv" controls preload="metadata"></audio>
+    <div id="fxrow" role="group" aria-label="تغيير الصوت"></div>
+    <div class="row">
+      <button id="rv-x" type="button" class="ghost" aria-label="إلغاء">🗑</button>
+      <button id="rv-ok" type="button">إرسال</button>
+    </div>
+  </div>
 </section>
 
 <div id="finder" hidden>
@@ -298,21 +330,27 @@ const msgRef = id => doc(db, ...path(), id);
 const fail = msg => { $("status").className = "off"; $("status").textContent = msg; };
 
 function openRoom(r) {
-  room = r; stick = true; clearReply(); closeSheet();
+  room = r; stick = true; clearReply(); closeSheet(); if (rec) stopRec(false); closeReview();
   $("title").textContent = r.name;
   $("code").style.display = r.type === "group" ? "" : "none";
   renderRooms();
   if (unsubMsgs) unsubMsgs();
-  const q = query(collection(db, ...path()), orderBy("createdAt", "desc"), limit(100));
+  const q = query(collection(db, ...path()), orderBy("createdAt", "desc"), limit(60));
   unsubMsgs = onSnapshot(q, { includeMetadataChanges: true }, snap => {
     const box = $("msgs");
     const near = box.scrollHeight - box.scrollTop - box.clientHeight < 140;
+    const pl = [...box.querySelectorAll("audio")].find(a => !a.paused);
+    const resume = pl ? { id: pl.dataset.id, t: pl.currentTime } : null;
     box.textContent = "";
     const list = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse();
     if (!list.length) {
       const e = document.createElement("div"); e.className = "empty"; e.textContent = "لا توجد رسائل بعد. اكتب أول رسالة."; box.appendChild(e);
     }
     list.forEach(m => box.appendChild(renderMsg(m)));
+    if (resume) {
+      const a = box.querySelector('audio[data-id="' + resume.id + '"]');
+      if (a) { a.currentTime = resume.t; a.play().catch(() => {}); }
+    }
     if (stick || near) { box.scrollTop = box.scrollHeight; stick = false; }
     setStatus(snap.metadata.fromCache);
   }, err => { $("status").textContent = "لا يمكن قراءة هذه الغرفة: " + err.code; });
@@ -339,7 +377,17 @@ function renderMsg(m) {
     el.appendChild(q);
   }
 
-  const txt = document.createElement("span"); txt.className = "txt"; txt.textContent = m.text; el.appendChild(txt);
+  if (m.audio) {
+    const a = document.createElement("audio"); a.controls = true; a.preload = "metadata";
+    a.dataset.id = m.id; setFx(a, m.fx); a.src = m.audio; el.appendChild(a);
+    if (m.dur || m.fx) {
+      const d = document.createElement("span"); d.className = "dur";
+      d.textContent = "🎤 " + (m.dur ? fmtTime(m.dur) : "") + (FX[m.fx] && m.fx !== "normal" ? " · " + FX[m.fx].label : "");
+      el.appendChild(d);
+    }
+  } else {
+    const txt = document.createElement("span"); txt.className = "txt"; txt.textContent = m.text; el.appendChild(txt);
+  }
 
   const counts = {};
   Object.values(m.reactions || {}).forEach(e => counts[e] = (counts[e] || 0) + 1);
@@ -393,6 +441,7 @@ function openSheet(m) {
     box.appendChild(b);
   });
   $("sh-del").style.display = m.uid === me.uid ? "" : "none";
+  $("sh-copy").style.display = m.audio ? "none" : "";
   $("sheet").hidden = false;
   $("sh-reply").focus();
 }
@@ -455,18 +504,179 @@ $("rb-x").onclick = clearReply;
 })();
 
 /* ---------- الإرسال ---------- */
+function sendMsg(extra) {
+  const data = { text: "", uid: me.uid, name: me.displayName || "مستخدم", createdAt: serverTimestamp(), ...extra };
+  if (replying) data.replyTo = replying;
+  clearReply(); stick = true;
+  // بدون await: عند انقطاع الإنترنت تُحفظ الرسالة محليًا وتُرسل لاحقًا
+  addDoc(collection(db, ...path()), data)
+    .catch(() => { $("status").className = "off"; $("status").textContent = "تعذّر إرسال الرسالة. ليس لديك صلاحية في هذه الغرفة."; });
+}
 $("f").onsubmit = e => {
   e.preventDefault();
   const text = $("t").value.trim();
   if (!text) return;
   $("t").value = "";
-  const data = { text, uid: me.uid, name: me.displayName || "مستخدم", createdAt: serverTimestamp() };
-  if (replying) data.replyTo = replying;
-  clearReply(); stick = true;
-  // بدون await: عند انقطاع الإنترنت تُحفظ الرسالة محليًا وتُرسل لاحقًا
-  addDoc(collection(db, ...path()), data)
-    .catch(() => { $("status").textContent = "تعذّر إرسال الرسالة. ليس لديك صلاحية في هذه الغرفة."; });
+  sendMsg({ text });
 };
+
+/* ---------- رسائل صوتية ---------- */
+const MAX_REC = 45;
+let rec = null;
+const fmtTime = s => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+function pickMime() {
+  if (!window.MediaRecorder) return "";
+  for (const t of ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg;codecs=opus"])
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  return "";
+}
+async function startRec() {
+  if (rec) return;
+  if (!window.MediaRecorder || !navigator.mediaDevices) return fail("هذا المتصفح لا يدعم التسجيل الصوتي.");
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { return fail("لم يتم السماح باستعمال الميكروفون. فعّله من إعدادات المتصفح ثم حاول مرة أخرى."); }
+  const mime = pickMime();
+  const mr = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 20000 } : { audioBitsPerSecond: 20000 });
+  rec = { mr, stream, chunks: [], t0: Date.now(), send: false, mime: mr.mimeType || mime, timer: null };
+  mr.ondataavailable = e => { if (e.data && e.data.size) rec.chunks.push(e.data); };
+  mr.onstop = onRecStop;
+  mr.start();
+  $("recbar").hidden = true; $("f").hidden = true; $("recbar").hidden = false; $("epanel").hidden = true;
+  recTick(); rec.timer = setInterval(recTick, 250);
+}
+function recTick() {
+  if (!rec) return;
+  const s = (Date.now() - rec.t0) / 1000;
+  $("rtime").textContent = fmtTime(s) + " / " + fmtTime(MAX_REC);
+  if (s >= MAX_REC) stopRec(true);
+}
+function stopRec(send) {
+  if (!rec) return;
+  rec.send = send; clearInterval(rec.timer);
+  if (rec.mr.state !== "inactive") rec.mr.stop();
+}
+async function onRecStop() {
+  const r = rec; rec = null;
+  r.stream.getTracks().forEach(t => t.stop());
+  $("recbar").hidden = true; $("f").hidden = false;
+  if (!r.send) return;
+  const dur = Math.round((Date.now() - r.t0) / 1000);
+  if (dur < 1 || !r.chunks.length) return;
+  const blob = new Blob(r.chunks, { type: r.mime || "audio/webm" });
+  let url;
+  try {
+    url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+  } catch { return fail("تعذّر تجهيز التسجيل."); }
+  if (url.length > 700000) return fail("التسجيل كبير جدًا. سجّل رسالة أقصر.");
+  showReview(url, dur);
+}
+
+/* ---------- تغيير الصوت (تأثيرات) ---------- */
+const FX = {
+  normal: { label: "🎙 عادي" },
+  robot:  { label: "🤖 روبوت" },
+  funny:  { label: "🐿 مضحك", rate: 1.55 },
+  deep:   { label: "👹 غليظ", rate: 0.72 },
+  alien:  { label: "👽 فضائي" },
+  echo:   { label: "🏔 صدى" },
+  phone:  { label: "📞 هاتف" }
+};
+const GRAPH = new Set(["robot", "alien", "echo", "phone"]);
+let actx = null;
+function getCtx() {
+  if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); }
+  return actx;
+}
+const unlockAudio = () => { const c = getCtx(); if (c && c.state === "suspended") c.resume(); };
+["pointerdown", "touchend", "click", "keydown"].forEach(ev => addEventListener(ev, unlockAudio, { capture: true }));
+
+function buildChain(fx, ctx, src) {
+  const nodes = [], oscs = [], out = ctx.destination;
+  const mk = n => { nodes.push(n); return n; };
+  if (fx === "robot" || fx === "alien") {
+    const ring = mk(ctx.createGain()); ring.gain.value = 0;
+    const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.value = fx === "robot" ? 50 : 380;
+    osc.connect(ring.gain); osc.start(); oscs.push(osc);
+    const up = mk(ctx.createGain()); up.gain.value = 1.7;
+    src.connect(ring); ring.connect(up); up.connect(out);
+    if (fx === "alien") { const dry = mk(ctx.createGain()); dry.gain.value = 0.4; src.connect(dry); dry.connect(out); }
+  } else if (fx === "echo") {
+    const d = mk(ctx.createDelay(1)); d.delayTime.value = 0.28;
+    const fb = mk(ctx.createGain()); fb.gain.value = 0.4;
+    const wet = mk(ctx.createGain()); wet.gain.value = 0.6;
+    src.connect(out); src.connect(d); d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(out);
+  } else if (fx === "phone") {
+    const hp = mk(ctx.createBiquadFilter()); hp.type = "highpass"; hp.frequency.value = 500;
+    const lp = mk(ctx.createBiquadFilter()); lp.type = "lowpass"; lp.frequency.value = 3000;
+    const g = mk(ctx.createGain()); g.gain.value = 1.5;
+    src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(out);
+  } else { src.connect(out); }
+  return { stop() {
+    oscs.forEach(o => { try { o.stop(); } catch {} });
+    nodes.forEach(n => { try { n.disconnect(); } catch {} });
+  } };
+}
+function unwireFx(a) { if (a._chain) { a._chain.stop(); a._chain = null; } }
+function wireFx(a) {
+  const fx = a.dataset.fx || "normal", ctx = getCtx();
+  if (!ctx) return;
+  const needs = GRAPH.has(fx);
+  if (!needs && !a._src) return;
+  if (ctx.state === "suspended") ctx.resume();
+  if (!a._src) { try { a._src = ctx.createMediaElementSource(a); } catch { return; } }
+  unwireFx(a);
+  try { a._src.disconnect(); } catch {}
+  a._chain = buildChain(needs ? fx : "normal", ctx, a._src);
+}
+function setFx(a, fx) {
+  fx = FX[fx] ? fx : "normal"; a.dataset.fx = fx;
+  const rate = FX[fx].rate || 1;
+  a.defaultPlaybackRate = rate; a.playbackRate = rate;
+  a.preservesPitch = a.mozPreservesPitch = a.webkitPreservesPitch = (rate === 1);
+  if (!a._fxHook) {
+    a._fxHook = true;
+    a.addEventListener("play", () => wireFx(a));
+    a.addEventListener("pause", () => unwireFx(a));
+    a.addEventListener("ended", () => unwireFx(a));
+  }
+  if (!a.paused) wireFx(a);
+}
+
+/* ---------- مراجعة التسجيل قبل الإرسال ---------- */
+let pending = null, chosen = "normal";
+function renderChips() {
+  const box = $("fxrow"); box.textContent = "";
+  Object.entries(FX).forEach(([k, f]) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = f.label;
+    b.className = "chip" + (k === chosen ? " on" : "");
+    b.onclick = () => {
+      chosen = k; renderChips();
+      const rv = $("rv"); setFx(rv, k); rv.currentTime = 0; rv.play().catch(() => {});
+    };
+    box.appendChild(b);
+  });
+}
+function showReview(url, dur) {
+  pending = { url, dur }; chosen = "normal";
+  const rv = $("rv"); rv.pause(); setFx(rv, "normal"); rv.src = url;
+  renderChips();
+  $("f").hidden = true; $("recbar").hidden = true; $("review").hidden = false;
+}
+function closeReview() {
+  const rv = $("rv"); rv.pause(); rv.removeAttribute("src"); rv.load();
+  pending = null; $("review").hidden = true; if (!rec) $("f").hidden = false;
+}
+$("rv-x").onclick = closeReview;
+$("rv-ok").onclick = () => {
+  if (!pending) return;
+  const extra = { text: "🎤 رسالة صوتية", audio: pending.url, dur: pending.dur };
+  if (chosen !== "normal") extra.fx = chosen;
+  closeReview(); sendMsg(extra);
+};
+$("mic").onclick = startRec;
+$("rc-x").onclick = () => stopRec(false);
+$("rc-ok").onclick = () => stopRec(true);
 
 /* ---------- حالة الاتصال ---------- */
 function setStatus(fromCache) {
