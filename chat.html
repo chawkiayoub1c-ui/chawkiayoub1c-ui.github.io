@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>دردشة Unfollow Radar</title>
+<style>
+  :root{
+    --bg:#0f1b2d; --surface:#172740; --line:#25385a; --text:#eaf0fa; --muted:#8fa3c4;
+    --mine:#ffb454; --mine-text:#2a1b00; --other:#21365a;
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+       display:flex;flex-direction:column;height:100dvh;
+       padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
+  header h1{font-size:1.05rem;flex:1}
+  header a{color:var(--muted);font-size:.85rem;text-decoration:none}
+  button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 14px;background:var(--mine);color:var(--mine-text);font-weight:600}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--mine);outline-offset:2px}
+  #login{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+  #login p{color:var(--muted);max-width:30ch;line-height:1.7}
+  #app{flex:1;display:none;min-height:0;flex-direction:column}
+  #status{font-size:.78rem;color:var(--muted);padding:6px 14px;background:var(--bg)}
+  #status.off{color:#ffd28a}
+  #rooms{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid var(--line);white-space:nowrap;scrollbar-width:none}
+  #rooms button{background:var(--surface);color:var(--text);border:1px solid var(--line);font-weight:500}
+  #rooms button.on{background:var(--mine);color:var(--mine-text);border-color:var(--mine)}
+  #rooms .act{background:transparent;color:var(--muted);border-style:dashed}
+  #bar{display:flex;align-items:center;gap:10px;padding:8px 14px;color:var(--muted);font-size:.85rem}
+  #bar b{color:var(--text);flex:1;font-size:.95rem}
+  #msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:0}
+  .m{max-width:82%;padding:8px 12px;border-radius:14px;background:var(--other);line-height:1.55;word-break:break-word}
+  .m.me{align-self:flex-start;background:var(--mine);color:var(--mine-text);border-bottom-left-radius:4px}
+  .m:not(.me){align-self:flex-end;border-bottom-right-radius:4px}
+  .m small{display:block;font-size:.72rem;opacity:.75;margin-bottom:2px}
+  .m.pending{opacity:.6}
+  .empty{margin:auto;color:var(--muted);text-align:center;line-height:1.8}
+  form{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
+  input{flex:1;min-width:0;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  @media (prefers-reduced-motion:no-preference){ .m{animation:in .15s ease-out} }
+  @keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>دردشة Unfollow Radar</h1>
+  <a href="./index.html">رجوع للأداة</a>
+  <button id="out" class="ghost" style="display:none">خروج</button>
+</header>
+
+<section id="login">
+  <h2>سجّل الدخول للدردشة</h2>
+  <p>ادخل بحساب Google لتشارك في الغرفة العامة أو تنشئ مجموعة مع أصدقائك.</p>
+  <button id="in">الدخول بحساب Google</button>
+  <p id="err" style="color:#ff9b9b"></p>
+</section>
+
+<section id="app">
+  <div id="status"></div>
+  <div id="rooms"></div>
+  <div id="bar"><b id="title">الغرفة العامة</b><button id="code" class="ghost" style="display:none">نسخ رمز الدعوة</button></div>
+  <div id="msgs"></div>
+  <form id="f" autocomplete="off">
+    <input id="t" placeholder="اكتب رسالة" maxlength="1000" aria-label="رسالة">
+    <button type="submit">إرسال</button>
+  </form>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, doc, setDoc, addDoc, updateDoc, arrayUnion, query, where, orderBy, limit, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5_-Qg0XcIVzaP2_iljrhSFJIrYOQP69k",
+  authDomain: "unfollow-radar-f4508.firebaseapp.com",
+  projectId: "unfollow-radar-f4508",
+  storageBucket: "unfollow-radar-f4508.firebasestorage.app",
+  messagingSenderId: "160025889873",
+  appId: "1:160025889873:web:71b2bcfdfc4c8081433c70"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
+
+const $ = id => document.getElementById(id);
+let me = null, room = { type: "public", id: null, name: "الغرفة العامة" };
+let unsubMsgs = null, unsubGroups = null, groups = [];
+
+/* ---------- تسجيل الدخول ---------- */
+$("in").onclick = async () => {
+  $("err").textContent = "";
+  const p = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, p); }
+  catch (e) {
+    if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") {
+      try { await signInWithRedirect(auth, p); return; } catch (e2) { e = e2; }
+    }
+    $("err").textContent = "تعذّر تسجيل الدخول (" + (e.code || "خطأ") + "). تأكد من الاتصال بالإنترنت وحاول مرة أخرى.";
+  }
+};
+$("out").onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async u => {
+  me = u;
+  $("login").style.display = u ? "none" : "flex";
+  $("app").style.display = u ? "flex" : "none";
+  $("out").style.display = u ? "" : "none";
+  if (unsubMsgs) unsubMsgs(); if (unsubGroups) unsubGroups();
+  if (!u) return;
+  setDoc(doc(db, "users", u.uid), { name: u.displayName || "مستخدم", photo: u.photoURL || "", seen: serverTimestamp() }, { merge: true }).catch(() => {});
+  unsubGroups = onSnapshot(query(collection(db, "groups"), where("members", "array-contains", u.uid)),
+    s => { groups = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRooms(); });
+  openRoom({ type: "public", id: null, name: "الغرفة العامة" });
+});
+
+/* ---------- الغرف ---------- */
+function renderRooms() {
+  const box = $("rooms"); box.textContent = "";
+  const add = (label, cls, fn) => { const b = document.createElement("button"); b.textContent = label; if (cls) b.className = cls; b.onclick = fn; box.appendChild(b); return b; };
+  add("العامة", room.type === "public" ? "on" : "", () => openRoom({ type: "public", id: null, name: "الغرفة العامة" }));
+  groups.forEach(g => add(g.name, room.id === g.id ? "on" : "", () => openRoom({ type: "group", id: g.id, name: g.name })));
+  add("+ مجموعة", "act", createGroup);
+  add("انضمام برمز", "act", joinGroup);
+}
+
+async function createGroup() {
+  const name = (prompt("اسم المجموعة؟") || "").trim().slice(0, 40);
+  if (!name) return;
+  try {
+    const ref = await addDoc(collection(db, "groups"), { name, members: [me.uid], createdBy: me.uid, createdAt: serverTimestamp() });
+    openRoom({ type: "group", id: ref.id, name });
+  } catch (e) { alert("تعذّر إنشاء المجموعة. تحقق من الإنترنت."); }
+}
+
+async function joinGroup() {
+  const id = (prompt("الصق رمز الدعوة") || "").trim();
+  if (!id) return;
+  try {
+    await updateDoc(doc(db, "groups", id), { members: arrayUnion(me.uid) });
+    const g = groups.find(x => x.id === id);
+    openRoom({ type: "group", id, name: g ? g.name : "مجموعة" });
+  } catch (e) { alert("رمز غير صحيح أو لا يوجد اتصال."); }
+}
+
+$("code").onclick = async () => {
+  try { await navigator.clipboard.writeText(room.id); $("code").textContent = "تم النسخ"; }
+  catch { prompt("رمز الدعوة:", room.id); }
+  setTimeout(() => $("code").textContent = "نسخ رمز الدعوة", 1500);
+};
+
+function path() { return room.type === "public" ? ["public"] : ["groups", room.id, "messages"]; }
+
+function openRoom(r) {
+  room = r;
+  $("title").textContent = r.name;
+  $("code").style.display = r.type === "group" ? "" : "none";
+  renderRooms();
+  if (unsubMsgs) unsubMsgs();
+  const q = query(collection(db, ...path()), orderBy("createdAt", "desc"), limit(100));
+  unsubMsgs = onSnapshot(q, { includeMetadataChanges: true }, snap => {
+    const box = $("msgs"); box.textContent = "";
+    const list = snap.docs.map(d => ({ ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse();
+    if (!list.length) {
+      const e = document.createElement("div"); e.className = "empty"; e.textContent = "لا توجد رسائل بعد. اكتب أول رسالة."; box.appendChild(e);
+    }
+    list.forEach(m => {
+      const el = document.createElement("div");
+      el.className = "m" + (m.uid === me.uid ? " me" : "") + (m.pending ? " pending" : "");
+      if (m.uid !== me.uid) { const s = document.createElement("small"); s.textContent = m.name || "مستخدم"; el.appendChild(s); }
+      el.appendChild(document.createTextNode(m.text));
+      box.appendChild(el);
+    });
+    box.scrollTop = box.scrollHeight;
+    setStatus(snap.metadata.fromCache);
+  }, err => { $("status").textContent = "لا يمكن قراءة هذه الغرفة: " + err.code; });
+}
+
+/* ---------- الإرسال ---------- */
+$("f").onsubmit = e => {
+  e.preventDefault();
+  const text = $("t").value.trim();
+  if (!text) return;
+  $("t").value = "";
+  // بدون await: عند انقطاع الإنترنت تُحفظ الرسالة محليًا وتُرسل لاحقًا
+  addDoc(collection(db, ...path()), {
+    text, uid: me.uid, name: me.displayName || "مستخدم", createdAt: serverTimestamp()
+  }).catch(() => { $("status").textContent = "تعذّر إرسال الرسالة. ليس لديك صلاحية في هذه الغرفة."; });
+};
+
+/* ---------- حالة الاتصال ---------- */
+function setStatus(fromCache) {
+  const off = !navigator.onLine || fromCache;
+  $("status").className = off ? "off" : "";
+  $("status").textContent = off ? "وضع بدون إنترنت: رسائلك تُحفظ وتُرسل عند عودة الاتصال" : "متصل";
+}
+addEventListener("online", () => setStatus(false));
+addEventListener("offline", () => setStatus(true));
+</script>
+</body>
+</html>
