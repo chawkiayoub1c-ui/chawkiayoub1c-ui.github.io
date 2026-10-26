@@ -74,6 +74,15 @@
   #sheet .act{background:transparent;color:var(--text);text-align:start;font-weight:500;padding:14px 12px;border-radius:10px}
   #sheet .act:hover,#sheet .act:focus-visible{background:var(--bg)}
   #sheet .act.danger{color:#ff9b9b}
+  #rooms .dm{border-color:#4f7cc4}
+  #finder{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,10,20,.6)}
+  #finder[hidden]{display:none}
+  #finder .card{width:100%;max-width:520px;max-height:80dvh;overflow-y:auto;background:var(--surface);border-radius:18px 18px 0 0;
+                padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-bottom:0}
+  #finder .row{display:flex;gap:8px}
+  #finder .hint{color:var(--muted);font-size:.8rem;line-height:1.6}
+  #fres{display:flex;flex-direction:column;gap:6px}
+  #fres button{background:var(--bg);color:var(--text);text-align:start;font-weight:500;padding:12px}
   @media (prefers-reduced-motion:no-preference){ .m{animation:in .15s ease-out} #sheet .card{animation:up .18s ease-out} }
   @keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
   @keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -110,6 +119,20 @@
   </form>
 </section>
 
+<div id="finder" hidden>
+  <div class="card" role="dialog" aria-label="محادثة خاصة">
+    <b>محادثة خاصة جديدة</b>
+    <div class="row">
+      <input id="fq" placeholder="اسم الشخص أو رمزه" aria-label="بحث">
+      <button id="fgo" type="button">بحث</button>
+    </div>
+    <div id="fres"></div>
+    <p class="hint" id="fmsg">اكتب بداية الاسم كما يظهر في حساب Google (الحروف اللاتينية حساسة للحرف الكبير)، أو الصق رمز صديقك.</p>
+    <button id="fmycode" type="button" class="ghost">نسخ رمزي لأرسله لصديقي</button>
+    <button id="fclose" type="button" class="ghost">إغلاق</button>
+  </div>
+</div>
+
 <div id="sheet" hidden>
   <div class="card" role="dialog" aria-label="خيارات الرسالة">
     <div class="emo" id="sh-emo"></div>
@@ -124,7 +147,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  collection, doc, setDoc, addDoc, updateDoc, deleteDoc, deleteField, arrayUnion, query, where, orderBy, limit, onSnapshot, serverTimestamp }
+  collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, deleteField, arrayUnion, query, where, orderBy, limit, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -144,7 +167,7 @@ const db = initializeFirestore(app, {
 
 const $ = id => document.getElementById(id);
 let me = null, room = { type: "public", id: null, name: "الغرفة العامة" };
-let unsubMsgs = null, unsubGroups = null, groups = [];
+let unsubMsgs = null, unsubGroups = null, unsubDms = null, groups = [], dms = [];
 
 /* ---------- تسجيل الدخول ---------- */
 $("in").onclick = async () => {
@@ -165,11 +188,13 @@ onAuthStateChanged(auth, async u => {
   $("login").style.display = u ? "none" : "flex";
   $("app").style.display = u ? "flex" : "none";
   $("out").style.display = u ? "" : "none";
-  if (unsubMsgs) unsubMsgs(); if (unsubGroups) unsubGroups();
+  if (unsubMsgs) unsubMsgs(); if (unsubGroups) unsubGroups(); if (unsubDms) unsubDms();
   if (!u) return;
   setDoc(doc(db, "users", u.uid), { name: u.displayName || "مستخدم", photo: u.photoURL || "", seen: serverTimestamp() }, { merge: true }).catch(() => {});
   unsubGroups = onSnapshot(query(collection(db, "groups"), where("members", "array-contains", u.uid)),
     s => { groups = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRooms(); });
+  unsubDms = onSnapshot(query(collection(db, "dms"), where("members", "array-contains", u.uid)),
+    s => { dms = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRooms(); });
   openRoom({ type: "public", id: null, name: "الغرفة العامة" });
 });
 
@@ -178,7 +203,13 @@ function renderRooms() {
   const box = $("rooms"); box.textContent = "";
   const add = (label, cls, fn) => { const b = document.createElement("button"); b.textContent = label; if (cls) b.className = cls; b.onclick = fn; box.appendChild(b); return b; };
   add("العامة", room.type === "public" ? "on" : "", () => openRoom({ type: "public", id: null, name: "الغرفة العامة" }));
-  groups.forEach(g => add(g.name, room.id === g.id ? "on" : "", () => openRoom({ type: "group", id: g.id, name: g.name })));
+  groups.forEach(g => add(g.name, room.type === "group" && room.id === g.id ? "on" : "", () => openRoom({ type: "group", id: g.id, name: g.name })));
+  dms.forEach(d => {
+    const other = (d.members || []).find(x => x !== me.uid);
+    const nm = (d.names && d.names[other]) || "مستخدم";
+    add("👤 " + nm, "dm" + (room.type === "dm" && room.id === d.id ? " on" : ""), () => openRoom({ type: "dm", id: d.id, name: nm }));
+  });
+  add("+ محادثة خاصة", "act", openFinder);
   add("+ مجموعة", "act", createGroup);
   add("انضمام برمز", "act", joinGroup);
 }
@@ -208,7 +239,55 @@ $("code").onclick = async () => {
   setTimeout(() => $("code").textContent = "نسخ رمز الدعوة", 1500);
 };
 
-function path() { return room.type === "public" ? ["public"] : ["groups", room.id, "messages"]; }
+function path() {
+  if (room.type === "public") return ["public"];
+  if (room.type === "dm") return ["dms", room.id, "messages"];
+  return ["groups", room.id, "messages"];
+}
+
+/* ---------- محادثات خاصة ---------- */
+const dmId = (a, b) => [a, b].sort().join("_");
+async function startDm(uid, name) {
+  if (!uid || uid === me.uid) return fail("لا يمكنك مراسلة نفسك.");
+  const id = dmId(me.uid, uid);
+  try {
+    await setDoc(doc(db, "dms", id), {
+      members: [me.uid, uid].sort(),
+      names: { [me.uid]: me.displayName || "مستخدم", [uid]: name || "مستخدم" }
+    }, { merge: true });
+  } catch (e) { return fail("تعذّر فتح المحادثة (" + (e.code || "خطأ") + ")."); }
+  closeFinder();
+  openRoom({ type: "dm", id, name: name || "مستخدم" });
+}
+function openFinder() { $("fq").value = ""; $("fres").textContent = ""; $("finder").hidden = false; $("fq").focus(); }
+function closeFinder() { $("finder").hidden = true; }
+$("fclose").onclick = closeFinder;
+$("finder").addEventListener("click", e => { if (e.target === $("finder")) closeFinder(); });
+$("fmycode").onclick = async () => {
+  try { await navigator.clipboard.writeText(me.uid); $("fmsg").textContent = "تم نسخ رمزك. أرسله لصديقك ليلصقه هنا."; }
+  catch { prompt("رمزي:", me.uid); }
+};
+$("fgo").onclick = async () => {
+  const q = $("fq").value.trim(), box = $("fres"), msg = $("fmsg");
+  box.textContent = ""; if (!q) return;
+  try {
+    if (/^[A-Za-z0-9]{20,}$/.test(q)) {
+      const d = await getDoc(doc(db, "users", q));
+      if (!d.exists()) { msg.textContent = "لا يوجد مستخدم بهذا الرمز."; return; }
+      return startDm(q, d.data().name);
+    }
+    const snap = await getDocs(query(collection(db, "users"), where("name", ">=", q), where("name", "<=", q + "\uf8ff"), limit(10)));
+    const found = snap.docs.filter(d => d.id !== me.uid);
+    msg.textContent = found.length ? "اختر شخصًا:" : "لا نتائج. جرّب جزءًا آخر من الاسم، أو استعمل الرمز.";
+    found.forEach(d => {
+      const b = document.createElement("button"); b.type = "button";
+      b.textContent = d.data().name || "مستخدم";
+      b.onclick = () => startDm(d.id, d.data().name);
+      box.appendChild(b);
+    });
+  } catch (e) { msg.textContent = "تعذّر البحث (" + (e.code || "خطأ") + ")."; }
+};
+$("fq").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("fgo").click(); } });
 
 const REACTIONS = ["👍","❤️","😂","😮","😢","🙏"];
 const EMOJIS = ["😀","😂","🤣","😊","😍","🥰","😘","😎","🤔","😅","😭","😡","🥳","😴","🤝","🙏",
@@ -321,7 +400,7 @@ function closeSheet() { $("sheet").hidden = true; current = null; }
 $("sheet").addEventListener("click", e => {
   if (e.target === $("sheet") && Date.now() - openedAt > 350) closeSheet();
 });
-addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+addEventListener("keydown", e => { if (e.key === "Escape") { closeSheet(); closeFinder(); } });
 
 $("sh-reply").onclick = () => { const m = current; closeSheet(); if (m) setReply(m); };
 $("sh-copy").onclick = async () => {
