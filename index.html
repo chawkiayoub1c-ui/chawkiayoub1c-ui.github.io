@@ -66,6 +66,7 @@ body{top:0!important}
 html[dir=rtl] .row .n{text-align:right}html[dir=ltr] .row .n{text-align:left}
 .share{text-align:center}.share .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.share button{padding:12px 20px}.share .alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s}#toast.on{opacity:1}
+#chatBtn{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;padding:12px 18px;border-radius:999px;background:var(--acc);color:var(--on);font-weight:800;font-size:15px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}#chatBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -341,6 +342,14 @@ if(GT)loadGT();
 </script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+<a href="chat.html" id="chatBtn">💬 <span id="chatTxt">دردشة</span></a>
+<script>
+(function(){
+  var L={ar:'دردشة',fr:'Discussion',en:'Chat'},sel=document.getElementById('lang'),tx=document.getElementById('chatTxt');
+  function up(){var l=(sel&&sel.value)||document.documentElement.lang||'ar';tx.textContent=L[l]||L.en}
+  if(sel)sel.addEventListener('change',up);up();
+})();
 </script>
 </body>
 </html>
