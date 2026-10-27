@@ -123,6 +123,17 @@
   #finder .hint{color:var(--muted);font-size:.8rem;line-height:1.6}
   #fres{display:flex;flex-direction:column;gap:6px}
   #fres button{background:var(--bg);color:var(--text);text-align:start;font-weight:500;padding:12px}
+  .av{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--line) center/cover no-repeat;
+      font-size:.7rem;margin-inline-end:6px;vertical-align:middle;color:var(--text);opacity:1}
+  #profile{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,10,20,.6)}
+  #profile[hidden]{display:none}
+  #profile .card{width:100%;max-width:520px;max-height:85dvh;overflow-y:auto;background:var(--surface);border-radius:18px 18px 0 0;
+                 padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-bottom:0}
+  #profile .row{display:flex;gap:8px;flex-wrap:wrap}
+  #profile .hint{color:var(--muted);font-size:.8rem;line-height:1.6}
+  #profile input[type=text]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  #p-av{width:88px;height:88px;border-radius:50%;margin:0 auto;background:var(--line) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:2rem}
+  #p-blocked{display:flex;flex-direction:column;gap:6px}
   @media (prefers-reduced-motion:no-preference){ .m{animation:in .15s ease-out} #sheet .card{animation:up .18s ease-out} }
   @keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
   @keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -141,7 +152,9 @@
 <header>
   <h1>دردشة Unfollow Radar</h1>
   <a href="./index.html">رجوع للأداة</a>
+  <a href="./chess.html">♟ شطرنج</a>
   <button id="loc-open" class="ghost">📡 قريب</button>
+  <button id="me-open" class="ghost" style="display:none">👤 حسابي</button>
   <button id="out" class="ghost" style="display:none">خروج</button>
 </header>
 
@@ -220,11 +233,34 @@
   </div>
 </div>
 
+<div id="profile" hidden>
+  <div class="card" role="dialog" aria-label="حسابي">
+    <b>حسابي</b>
+    <div id="p-av" aria-hidden="true"></div>
+    <div class="row">
+      <button id="p-photo" type="button" class="ghost">📷 تغيير الصورة</button>
+      <button id="p-reset" type="button" class="ghost">استرجاع بيانات Google</button>
+    </div>
+    <input id="p-file" type="file" accept="image/*" hidden>
+    <input id="p-name" type="text" maxlength="30" placeholder="الاسم الظاهر للآخرين" aria-label="الاسم الظاهر">
+    <p class="hint" id="p-msg"></p>
+    <div class="row">
+      <button id="p-save" type="button">حفظ</button>
+      <button id="p-close" type="button" class="ghost">إغلاق</button>
+    </div>
+    <b>المحظورون</b>
+    <div id="p-blocked"></div>
+    <p class="hint">الحظر خاص بهذا الجهاز: يخفي رسائل الشخص ومحادثته ومكالماته عندك فقط، ولا يعرف أنك حظرته.</p>
+  </div>
+</div>
+
 <div id="sheet" hidden>
   <div class="card" role="dialog" aria-label="خيارات الرسالة">
     <div class="emo" id="sh-emo"></div>
     <button class="act" id="sh-reply" type="button">↩ رد</button>
+    <button class="act" id="sh-dm" type="button">💬 مراسلة خاصة</button>
     <button class="act" id="sh-copy" type="button">نسخ النص</button>
+    <button class="act danger" id="sh-block" type="button">🚫 حظر هذا الشخص</button>
     <button class="act danger" id="sh-del" type="button">مسح الرسالة</button>
   </div>
 </div>
@@ -275,17 +311,23 @@ onAuthStateChanged(auth, async u => {
   $("login").style.display = u ? "none" : "flex";
   $("app").style.display = u ? "flex" : "none";
   $("out").style.display = u ? "" : "none";
+  $("me-open").style.display = u ? "" : "none";
   if (unsubMsgs) unsubMsgs(); if (unsubGroups) unsubGroups(); if (unsubDms) unsubDms(); if (unsubCalls) unsubCalls(); hideIncoming(); endCall(true);
   if (!u) return;
-  setDoc(doc(db, "users", u.uid), { name: u.displayName || "مستخدم", photo: u.photoURL || "", seen: serverTimestamp() }, { merge: true }).catch(() => {});
+  loadBlocked();
+  await loadProfile(u);
   unsubGroups = onSnapshot(query(collection(db, "groups"), where("members", "array-contains", u.uid)),
     s => { groups = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRooms(); });
   unsubDms = onSnapshot(query(collection(db, "dms"), where("members", "array-contains", u.uid)),
-    s => { dms = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRooms(); });
+    s => {
+      dms = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRooms();
+      dms.forEach(d => { const o = (d.members || []).find(x => x !== me.uid); if (o && !userCache.has(o)) getUser(o).then(() => renderRooms()); });
+    });
   unsubCalls = onSnapshot(query(collection(db, "calls"), where("callee", "==", u.uid), where("status", "==", "ringing")),
     snap => snap.docChanges().forEach(ch => {
       const d = ch.doc.data({ serverTimestamps: "estimate" });
       if (ch.type === "removed") { if (incoming && incoming.id === ch.doc.id) hideIncoming(); return; }
+      if (isBlocked(d.caller)) { updateDoc(doc(db, "calls", ch.doc.id), { status: "declined" }).catch(() => {}); return; }
       const t = d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : Date.now();
       if (Date.now() - t > 45000) return;
       if (call || incoming) { updateDoc(doc(db, "calls", ch.doc.id), { status: "declined" }).catch(() => {}); return; }
@@ -302,7 +344,9 @@ function renderRooms() {
   groups.forEach(g => add(g.name, room.type === "group" && room.id === g.id ? "on" : "", () => openRoom({ type: "group", id: g.id, name: g.name })));
   dms.forEach(d => {
     const other = (d.members || []).find(x => x !== me.uid);
-    const nm = (d.names && d.names[other]) || "مستخدم";
+    if (isBlocked(other)) return;
+    const uc = userCache.get(other);
+    const nm = (uc && uc.name) || (d.names && d.names[other]) || "مستخدم";
     add("👤 " + nm, "dm" + (room.type === "dm" && room.id === d.id ? " on" : ""), () => openRoom({ type: "dm", id: d.id, name: nm }));
   });
   add("+ محادثة خاصة", "act", openFinder);
@@ -335,6 +379,55 @@ $("code").onclick = async () => {
   setTimeout(() => $("code").textContent = "نسخ رمز الدعوة", 1500);
 };
 
+/* ---------- صلاحية المشرف: مسح أي رسالة في العامة والمجموعات (ليس الخاصة) ---------- */
+const ADMIN_EMAIL = "ayoubchawki1c@gmail.com";
+const isAdmin = () => !!me && me.emailVerified === true && (me.email || "").toLowerCase() === ADMIN_EMAIL;
+const canDelete = m => !!me && (m.uid === me.uid || (isAdmin() && room.type !== "dm"));
+
+/* ---------- الملف الشخصي والصور ---------- */
+let prof = { name: "", photo: "", custom: false };
+const myName = () => prof.name || (me && me.displayName) || "مستخدم";
+const userCache = new Map(), userReq = new Map();
+function getUser(uid) {
+  if (userCache.has(uid)) return Promise.resolve(userCache.get(uid));
+  if (!userReq.has(uid)) {
+    userReq.set(uid, getDoc(doc(db, "users", uid)).then(d => {
+      const u = d.exists() ? { name: d.data().name || "", photo: d.data().photo || "" } : null;
+      userCache.set(uid, u); return u;
+    }).catch(() => { userReq.delete(uid); return null; }));
+  }
+  return userReq.get(uid);
+}
+function paintAvatar(el, photo, name) {
+  el.style.backgroundImage = photo ? "url(" + JSON.stringify(photo) + ")" : "";
+  el.textContent = photo ? "" : (name || "?").trim().slice(0, 1).toUpperCase();
+}
+function avatarEl(uid, name) {
+  const s = document.createElement("span"); s.className = "av";
+  paintAvatar(s, "", name);
+  const u = userCache.get(uid);
+  if (u) paintAvatar(s, u.photo, name); else getUser(uid).then(x => { if (x && x.photo) paintAvatar(s, x.photo, name); });
+  return s;
+}
+async function loadProfile(u) {
+  prof = { name: u.displayName || "مستخدم", photo: u.photoURL || "", custom: false };
+  const ref = doc(db, "users", u.uid);
+  let custom = false;
+  try {
+    const d = await getDoc(ref), x = d.exists() ? d.data() : {};
+    if (x.custom) { custom = true; prof = { name: x.name || prof.name, photo: x.photo || "", custom: true }; }
+  } catch {}
+  setDoc(ref, custom ? { seen: serverTimestamp() } : { name: prof.name, photo: prof.photo, seen: serverTimestamp() }, { merge: true }).catch(() => {});
+  userCache.set(u.uid, { name: prof.name, photo: prof.photo });
+}
+
+/* ---------- الحظر (محلي على هذا الجهاز) ---------- */
+let blocked = new Map();
+const bKey = () => "blocked:" + (me ? me.uid : "");
+function loadBlocked() { try { blocked = new Map(JSON.parse(localStorage.getItem(bKey()) || "[]")); } catch { blocked = new Map(); } }
+function saveBlocked() { try { localStorage.setItem(bKey(), JSON.stringify([...blocked])); } catch {} }
+const isBlocked = uid => blocked.has(uid);
+
 function path() {
   if (room.type === "public") return ["public"];
   if (room.type === "dm") return ["dms", room.id, "messages"];
@@ -345,11 +438,12 @@ function path() {
 const dmId = (a, b) => [a, b].sort().join("_");
 async function startDm(uid, name) {
   if (!uid || uid === me.uid) return fail("لا يمكنك مراسلة نفسك.");
+  if (isBlocked(uid)) return fail("هذا الشخص محظور. ألغِ الحظر من «حسابي» أولا.");
   const id = dmId(me.uid, uid);
   try {
     await setDoc(doc(db, "dms", id), {
       members: [me.uid, uid].sort(),
-      names: { [me.uid]: me.displayName || "مستخدم", [uid]: name || "مستخدم" }
+      names: { [me.uid]: myName(), [uid]: name || "مستخدم" }
     }, { merge: true });
   } catch (e) { return fail("تعذّر فتح المحادثة (" + (e.code || "خطأ") + ")."); }
   closeFinder();
@@ -373,7 +467,7 @@ $("fgo").onclick = async () => {
       return startDm(q, d.data().name);
     }
     const snap = await getDocs(query(collection(db, "users"), where("name", ">=", q), where("name", "<=", q + "\uf8ff"), limit(10)));
-    const found = snap.docs.filter(d => d.id !== me.uid);
+    const found = snap.docs.filter(d => d.id !== me.uid && !isBlocked(d.id));
     msg.textContent = found.length ? "اختر شخصًا:" : "لا نتائج. جرّب جزءًا آخر من الاسم، أو استعمل الرمز.";
     found.forEach(d => {
       const b = document.createElement("button"); b.type = "button";
@@ -407,7 +501,7 @@ function openRoom(r) {
     const pl = [...box.querySelectorAll("audio")].find(a => !a.paused);
     const resume = pl ? { id: pl.dataset.id, t: pl.currentTime } : null;
     box.textContent = "";
-    const list = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse();
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse().filter(m => !isBlocked(m.uid));
     if (!list.length) {
       const e = document.createElement("div"); e.className = "empty"; e.textContent = "لا توجد رسائل بعد. اكتب أول رسالة."; box.appendChild(e);
     }
@@ -426,7 +520,7 @@ function renderMsg(m) {
   const el = document.createElement("div");
   el.id = "m-" + m.id;
   el.className = "m" + (mine ? " me" : "") + (m.pending ? " pending" : "");
-  if (!mine) { const s = document.createElement("small"); s.textContent = m.name || "مستخدم"; el.appendChild(s); }
+  if (!mine) { const s = document.createElement("small"); s.appendChild(avatarEl(m.uid, m.name)); s.appendChild(document.createTextNode(m.name || "مستخدم")); el.appendChild(s); }
 
   if (m.replyTo) {
     const q = document.createElement("button"); q.type = "button"; q.className = "quote";
@@ -505,7 +599,9 @@ function openSheet(m) {
     b.onclick = () => { closeSheet(); react(m, e); };
     box.appendChild(b);
   });
-  $("sh-del").style.display = m.uid === me.uid ? "" : "none";
+  $("sh-dm").style.display = (m.uid !== me.uid && room.type !== "dm") ? "" : "none";
+  $("sh-block").style.display = m.uid !== me.uid ? "" : "none";
+  $("sh-del").style.display = canDelete(m) ? "" : "none";
   $("sh-copy").style.display = m.audio ? "none" : "";
   $("sheet").hidden = false;
   $("sh-reply").focus();
@@ -517,16 +613,85 @@ $("sheet").addEventListener("click", e => {
 addEventListener("keydown", e => { if (e.key === "Escape") { closeSheet(); closeFinder(); } });
 
 $("sh-reply").onclick = () => { const m = current; closeSheet(); if (m) setReply(m); };
+$("sh-dm").onclick = () => {
+  const m = current; closeSheet();
+  if (m && m.uid && m.uid !== me.uid) startDm(m.uid, m.name);
+};
+$("sh-block").onclick = () => {
+  const m = current; closeSheet();
+  if (!m || !m.uid || m.uid === me.uid) return;
+  if (!confirm("حظر " + (m.name || "مستخدم") + "؟ ستختفي رسائله ومحادثته ومكالماته عندك فقط على هذا الجهاز.")) return;
+  blocked.set(m.uid, m.name || "مستخدم"); saveBlocked();
+  const d = room.type === "dm" ? dms.find(x => x.id === room.id) : null;
+  openRoom(d && (d.members || []).includes(m.uid) ? { type: "public", id: null, name: "الغرفة العامة" } : room);
+};
 $("sh-copy").onclick = async () => {
   const m = current; closeSheet(); if (!m) return;
   try { await navigator.clipboard.writeText(m.text); } catch { prompt("انسخ النص:", m.text); }
 };
 $("sh-del").onclick = async () => {
   const m = current; closeSheet();
-  if (!m || m.uid !== me.uid) return;
-  if (!confirm("مسح هذه الرسالة عند الجميع؟")) return;
+  if (!m || !canDelete(m)) return;
+  const others = m.uid !== me.uid;
+  if (!confirm(others ? "مسح رسالة " + (m.name || "مستخدم") + " عند الجميع؟" : "مسح هذه الرسالة عند الجميع؟")) return;
   try { await deleteDoc(msgRef(m.id)); }
   catch (e) { fail("تعذّر مسح الرسالة (" + (e.code || "خطأ") + ")."); }
+};
+
+/* ---------- حسابي ---------- */
+let newPhoto = null;
+function renderBlocked() {
+  const box = $("p-blocked"); box.textContent = "";
+  if (!blocked.size) { const p = document.createElement("p"); p.className = "hint"; p.textContent = "لا يوجد أحد محظور."; box.appendChild(p); return; }
+  blocked.forEach((name, uid) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "ghost";
+    b.textContent = "إلغاء حظر " + name;
+    b.onclick = () => { blocked.delete(uid); saveBlocked(); renderBlocked(); openRoom(room); };
+    box.appendChild(b);
+  });
+}
+function openProfile() {
+  newPhoto = null; $("p-name").value = prof.name; $("p-msg").textContent = "";
+  paintAvatar($("p-av"), prof.photo, prof.name); renderBlocked(); $("profile").hidden = false;
+}
+function resizeImage(file, size) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const c = document.createElement("canvas"); c.width = c.height = size;
+      const m = Math.min(img.width, img.height);
+      c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
+      URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("img")); };
+    img.src = url;
+  });
+}
+function saveProfile(data, okMsg) {
+  prof = { name: data.name, photo: data.photo, custom: data.custom };
+  userCache.set(me.uid, { name: prof.name, photo: prof.photo });
+  $("p-name").value = prof.name; paintAvatar($("p-av"), prof.photo, prof.name); newPhoto = null;
+  $("p-msg").textContent = okMsg;
+  setDoc(doc(db, "users", me.uid), { name: prof.name, photo: prof.photo, custom: prof.custom, seen: serverTimestamp() }, { merge: true })
+    .catch(e => { $("p-msg").textContent = "تعذّر الحفظ على الخادم (" + (e.code || "خطأ") + ")."; });
+}
+$("me-open").onclick = openProfile;
+$("p-close").onclick = () => { $("profile").hidden = true; };
+$("profile").addEventListener("click", e => { if (e.target === $("profile")) $("profile").hidden = true; });
+$("p-photo").onclick = () => $("p-file").click();
+$("p-file").onchange = async () => {
+  const f = $("p-file").files[0]; $("p-file").value = ""; if (!f) return;
+  try { newPhoto = await resizeImage(f, 128); paintAvatar($("p-av"), newPhoto, $("p-name").value); $("p-msg").textContent = "اضغط «حفظ» لتثبيت الصورة."; }
+  catch { $("p-msg").textContent = "تعذّر قراءة هذه الصورة. جرّب صورة أخرى."; }
+};
+$("p-save").onclick = () => {
+  const name = $("p-name").value.trim();
+  if (name.length < 2) { $("p-msg").textContent = "الاسم قصير جدا (حرفان على الأقل)."; return; }
+  saveProfile({ name, photo: newPhoto !== null ? newPhoto : prof.photo, custom: true }, "تم الحفظ ✅");
+};
+$("p-reset").onclick = () => {
+  if (!confirm("استرجاع الاسم والصورة من حساب Google؟")) return;
+  saveProfile({ name: me.displayName || "مستخدم", photo: me.photoURL || "", custom: false }, "تم استرجاع بيانات Google ✅");
 };
 
 /* ---------- التفاعل بالرموز ---------- */
@@ -570,7 +735,7 @@ $("rb-x").onclick = clearReply;
 
 /* ---------- الإرسال ---------- */
 function sendMsg(extra) {
-  const data = { text: "", uid: me.uid, name: me.displayName || "مستخدم", createdAt: serverTimestamp(), ...extra };
+  const data = { text: "", uid: me.uid, name: myName(), createdAt: serverTimestamp(), ...extra };
   if (replying) data.replyTo = replying;
   clearReply(); stick = true;
   // بدون await: عند انقطاع الإنترنت تُحفظ الرسالة محليًا وتُرسل لاحقًا
@@ -809,7 +974,7 @@ async function startCall(video) {
   showCallUI(c, "جارٍ الاتصال…");
   try {
     const offer = await c.pc.createOffer(); await c.pc.setLocalDescription(offer);
-    const p = setDoc(ref, { caller: me.uid, callerName: me.displayName || "مستخدم", callee: other, dmId: room.id, video: !!video,
+    const p = setDoc(ref, { caller: me.uid, callerName: myName(), callee: other, dmId: room.id, video: !!video,
       status: "ringing", offer: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
     made = true; buf.splice(0).forEach(sendCand);
     await p;
