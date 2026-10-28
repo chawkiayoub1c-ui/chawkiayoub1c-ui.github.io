@@ -344,10 +344,19 @@ if(GT)loadGT();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 <style>
-#instBtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;padding:12px 18px;border-radius:999px;background:var(--card);color:var(--ink);border:1.5px solid var(--acc);font:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-#instBtn[hidden]{display:none}#instBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#instBtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;display:inline-flex;align-items:center;gap:clamp(6px,2vw,10px);max-width:calc(50vw - 24px);min-width:0;padding:clamp(9px,2.6vw,13px) clamp(12px,4vw,20px) clamp(9px,2.6vw,13px) clamp(10px,3.4vw,16px);border:0;border-radius:999px;background:linear-gradient(135deg,#3b5bdb,#7048e8);color:#fff;font:inherit;font-weight:800;font-size:clamp(13px,3.8vw,16px);line-height:1.2;cursor:pointer;overflow:hidden;box-shadow:0 6px 18px rgba(59,91,219,.45);animation:instPulse 2.4s ease-in-out infinite;transition:transform .15s}
+#instBtn:hover{transform:translateY(-2px) scale(1.03)}#instBtn:active{transform:scale(.96)}
+#instBtn::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:instShine 3.6s ease-in-out infinite;pointer-events:none}
+#instBtn .ic{flex:none;width:clamp(22px,6.5vw,28px);height:clamp(22px,6.5vw,28px);border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center}
+#instBtn .ic svg{width:60%;height:60%;animation:instBounce 1.6s ease-in-out infinite}
+#instTxt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@keyframes instPulse{0%,100%{box-shadow:0 6px 18px rgba(59,91,219,.45),0 0 0 0 rgba(112,72,232,.55)}50%{box-shadow:0 6px 18px rgba(59,91,219,.45),0 0 0 10px rgba(112,72,232,0)}}
+@keyframes instShine{0%,55%{left:-60%}100%{left:130%}}
+@keyframes instBounce{0%,100%{transform:translateY(-1px)}50%{transform:translateY(2px)}}
+@media (prefers-reduced-motion:reduce){#instBtn,#instBtn::after,#instBtn .ic svg{animation:none}}
+#instBtn[hidden]{display:none}#instBtn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 </style>
-<button id="instBtn" type="button" hidden>⬇️ <span id="instTxt"></span></button>
+<button id="instBtn" type="button" hidden><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M6 11l6 6 6-6M5 21h14"/></svg></span><span id="instTxt"></span></button>
 <script>
 (function(){
   var b=document.getElementById('instBtn'),tx=document.getElementById('instTxt'),sel=document.getElementById('lang'),ev=null;
