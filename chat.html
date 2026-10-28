@@ -201,6 +201,23 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
 #in-kind{color:var(--muted)}
 #incoming .row{gap:72px}
 #incoming .row button{width:74px;height:74px;min-height:74px;border-radius:50%;font-size:1.7rem;padding:0}
+#att{padding:9px 12px;font-size:1.1rem;line-height:1}
+#emoji,#mic,#att{width:46px;height:46px;padding:0;border-radius:50%;font-size:1.2rem}
+.m .pic{display:block;width:240px;max-width:100%;max-height:320px;object-fit:cover;border-radius:12px;margin-top:2px;cursor:zoom-in;background:rgba(0,0,0,.2)}
+.m .vid{display:block;width:260px;max-width:100%;max-height:340px;border-radius:12px;margin-top:2px;background:#000}
+.m.flagged{outline:2px solid #ff6b6b;outline-offset:2px}
+#flt{padding:4px 10px;min-height:36px}
+#flt.on{background:#ff6b6b;color:#fff;border-color:transparent}
+#online{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,10,20,.6)}
+#online[hidden]{display:none}
+#online .card{width:100%;max-width:520px;max-height:80dvh;overflow-y:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-bottom:0}
+#on-list{display:flex;flex-direction:column;gap:6px}
+#on-list button{display:flex;align-items:center;background:var(--bg);color:var(--text);text-align:start;font-weight:500;padding:12px}
+#on-list button:disabled{opacity:.7}
+#on-list .hint{color:var(--muted);font-size:.85rem}
+#pic{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+#pic[hidden]{display:none}
+#pic img{max-width:100%;max-height:100%;object-fit:contain}
 </style>
 </head>
 <body>
@@ -209,6 +226,7 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
   <a href="./index.html">رجوع للأداة</a>
   <a href="./chess.html">♟ شطرنج</a>
   <button id="inst" class="ghost" style="display:none">⬇️ تثبيت التطبيق</button>
+  <button id="on-open" class="ghost" style="display:none">🟢 المتصلون</button>
   <button id="loc-open" class="ghost">📡 قريب</button>
   <button id="me-open" class="ghost" style="display:none">👤 حسابي</button>
   <button id="out" class="ghost" style="display:none">خروج</button>
@@ -224,7 +242,7 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
 <section id="app">
   <div id="status"></div>
   <div id="rooms"></div>
-  <div id="bar"><b id="title">الغرفة العامة</b><button id="code" class="ghost" style="display:none">نسخ رمز الدعوة</button><button id="call-a" class="ghost" style="display:none" aria-label="مكالمة صوتية">📞</button><button id="call-v" class="ghost" style="display:none" aria-label="مكالمة فيديو">📹</button></div>
+  <div id="bar"><b id="title">الغرفة العامة</b><button id="code" class="ghost" style="display:none">نسخ رمز الدعوة</button><button id="flt" class="ghost" style="display:none" aria-label="الرسائل المبلغ عنها فقط">🚩</button><button id="call-a" class="ghost" style="display:none" aria-label="مكالمة صوتية">📞</button><button id="call-v" class="ghost" style="display:none" aria-label="مكالمة فيديو">📹</button></div>
   <div id="msgs"></div>
   <div id="replybar" hidden>
     <div><b id="rb-name"></b><span id="rb-text"></span></div>
@@ -234,6 +252,8 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
   <form id="f" autocomplete="off">
     <button id="emoji" type="button" class="ghost" aria-label="الرموز التعبيرية" aria-expanded="false">😊</button>
     <input id="t" placeholder="اكتب رسالة" maxlength="1000" aria-label="رسالة">
+    <button id="att" type="button" class="ghost" aria-label="إرسال صورة أو فيديو">📎</button>
+    <input id="att-file" type="file" accept="image/*,video/*" hidden>
     <button id="mic" type="button" class="ghost" aria-label="تسجيل رسالة صوتية">🎤</button>
     <button type="submit">إرسال</button>
   </form>
@@ -313,6 +333,17 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
   </div>
 </div>
 
+<div id="online" hidden>
+  <div class="card" role="dialog" aria-label="المتصلون">
+    <b id="on-title">المتصلون الآن</b>
+    <div id="on-list"></div>
+    <p class="hint" style="color:var(--muted);font-size:.8rem">تُحدَّث القائمة كل 20 ثانية. يظهر الشخص متصلا ما دام تطبيقه مفتوحا.</p>
+    <button id="on-close" type="button" class="ghost">إغلاق</button>
+  </div>
+</div>
+
+<div id="pic" hidden><img id="pic-img" alt="صورة"></div>
+
 <div id="sheet" hidden>
   <div class="card" role="dialog" aria-label="خيارات الرسالة">
     <div class="emo" id="sh-emo"></div>
@@ -320,6 +351,7 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
     <button class="act" id="sh-dm" type="button">💬 مراسلة خاصة</button>
     <button class="act" id="sh-copy" type="button">نسخ النص</button>
     <button class="act danger" id="sh-block" type="button">🚫 حظر هذا الشخص</button>
+    <button class="act danger" id="sh-rep" type="button">🚩 إبلاغ المشرف عن الرسالة</button>
     <button class="act danger" id="sh-del" type="button">مسح الرسالة</button>
   </div>
 </div>
@@ -329,8 +361,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, deleteField, arrayUnion, query, where, orderBy, limit, onSnapshot, serverTimestamp }
+  collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, deleteField, arrayUnion, query, where, orderBy, limit, onSnapshot, serverTimestamp, Timestamp }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getStorage, ref as sref, uploadBytesResumable, getDownloadURL, deleteObject }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5_-Qg0XcIVzaP2_iljrhSFJIrYOQP69k",
@@ -343,7 +377,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = initializeFirestore(app, {
+const storage = getStorage(app);
+const db =initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
 });
 
@@ -363,7 +398,10 @@ $("in").onclick = async () => {
     $("err").textContent = "تعذّر تسجيل الدخول (" + (e.code || "خطأ") + "). تأكد من الاتصال بالإنترنت وحاول مرة أخرى.";
   }
 };
-$("out").onclick = () => signOut(auth);
+$("out").onclick = async () => {
+  await Promise.race([beat(false), new Promise(r => setTimeout(r, 1500))]);
+  signOut(auth);
+};
 
 onAuthStateChanged(auth, async u => {
   me = u;
@@ -371,10 +409,15 @@ onAuthStateChanged(auth, async u => {
   $("app").style.display = u ? "flex" : "none";
   $("out").style.display = u ? "" : "none";
   $("me-open").style.display = u ? "" : "none";
+  $("on-open").style.display = u ? "" : "none";
+  $("flt").style.display = "none"; $("flt").classList.remove("on"); onlyFlagged = false;
+  stopPresence();
   if (unsubMsgs) unsubMsgs(); if (unsubGroups) unsubGroups(); if (unsubDms) unsubDms(); if (unsubCalls) unsubCalls(); hideIncoming(); endCall(true);
   if (!u) return;
   loadBlocked();
   await loadProfile(u);
+  startPresence();
+  $("flt").style.display = isAdmin() ? "" : "none";
   unsubGroups = onSnapshot(query(collection(db, "groups"), where("members", "array-contains", u.uid)),
     s => { groups = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRooms(); });
   unsubDms = onSnapshot(query(collection(db, "dms"), where("members", "array-contains", u.uid)),
@@ -487,10 +530,10 @@ function loadBlocked() { try { blocked = new Map(JSON.parse(localStorage.getItem
 function saveBlocked() { try { localStorage.setItem(bKey(), JSON.stringify([...blocked])); } catch {} }
 const isBlocked = uid => blocked.has(uid);
 
-function path() {
-  if (room.type === "public") return ["public"];
-  if (room.type === "dm") return ["dms", room.id, "messages"];
-  return ["groups", room.id, "messages"];
+function path(r = room) {
+  if (r.type === "public") return ["public"];
+  if (r.type === "dm") return ["dms", r.id, "messages"];
+  return ["groups", r.id, "messages"];
 }
 
 /* ---------- محادثات خاصة ---------- */
@@ -557,16 +600,16 @@ function openRoom(r) {
   unsubMsgs = onSnapshot(q, { includeMetadataChanges: true }, snap => {
     const box = $("msgs");
     const near = box.scrollHeight - box.scrollTop - box.clientHeight < 140;
-    const pl = [...box.querySelectorAll("audio")].find(a => !a.paused);
+    const pl = [...box.querySelectorAll("audio,video")].find(a => !a.paused);
     const resume = pl ? { id: pl.dataset.id, t: pl.currentTime } : null;
     box.textContent = "";
-    const list = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse().filter(m => !isBlocked(m.uid));
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: "estimate" }), pending: d.metadata.hasPendingWrites })).reverse().filter(m => !isBlocked(m.uid) && (!onlyFlagged || Object.keys(m.reports || {}).length));
     if (!list.length) {
-      const e = document.createElement("div"); e.className = "empty"; e.textContent = "لا توجد رسائل بعد. اكتب أول رسالة."; box.appendChild(e);
+      const e = document.createElement("div"); e.className = "empty"; e.textContent = onlyFlagged ? "لا توجد رسائل مبلغ عنها." : "لا توجد رسائل بعد. اكتب أول رسالة."; box.appendChild(e);
     }
     list.forEach(m => box.appendChild(renderMsg(m)));
     if (resume) {
-      const a = box.querySelector('audio[data-id="' + resume.id + '"]');
+      const a = box.querySelector('audio[data-id="' + resume.id + '"],video[data-id="' + resume.id + '"]');
       if (a) { a.currentTime = resume.t; a.play().catch(() => {}); }
     }
     if (stick || near) { box.scrollTop = box.scrollHeight; stick = false; }
@@ -595,7 +638,13 @@ function renderMsg(m) {
     el.appendChild(q);
   }
 
-  if (m.audio) {
+  if (m.image && /^data:image\//.test(m.image)) {
+    const im = document.createElement("img"); im.className = "pic"; im.alt = "صورة"; im.loading = "lazy"; im.src = m.image;
+    im.onclick = () => openPic(m.image); el.appendChild(im);
+  } else if (m.video && /^https:\/\//.test(m.video)) {
+    const v = document.createElement("video"); v.className = "vid"; v.controls = true; v.preload = "metadata"; v.playsInline = true;
+    v.dataset.id = m.id; v.src = m.video; el.appendChild(v);
+  } else if (m.audio) {
     const a = document.createElement("audio"); a.controls = true; a.preload = "metadata";
     a.dataset.id = m.id; setFx(a, m.fx); a.src = m.audio; el.appendChild(a);
     if (m.dur || m.fx) {
@@ -620,6 +669,12 @@ function renderMsg(m) {
       rx.appendChild(b);
     });
     el.appendChild(rx);
+  }
+
+  const rc = Object.keys(m.reports || {}).length;
+  if (rc && isAdmin()) {
+    el.classList.add("flagged");
+    const fl = document.createElement("small"); fl.textContent = "🚩 بلاغات: " + rc; el.appendChild(fl);
   }
 
   const more = document.createElement("button"); more.type = "button"; more.className = "more";
@@ -661,7 +716,8 @@ function openSheet(m) {
   $("sh-dm").style.display = (m.uid !== me.uid && room.type !== "dm") ? "" : "none";
   $("sh-block").style.display = m.uid !== me.uid ? "" : "none";
   $("sh-del").style.display = canDelete(m) ? "" : "none";
-  $("sh-copy").style.display = m.audio ? "none" : "";
+  $("sh-copy").style.display = (m.audio || m.image || m.video) ? "none" : "";
+  $("sh-rep").style.display = m.uid !== me.uid ? "" : "none";
   $("sheet").hidden = false;
   $("sh-reply").focus();
 }
@@ -693,7 +749,7 @@ $("sh-del").onclick = async () => {
   if (!m || !canDelete(m)) return;
   const others = m.uid !== me.uid;
   if (!confirm(others ? "مسح رسالة " + (m.name || "مستخدم") + " عند الجميع؟" : "مسح هذه الرسالة عند الجميع؟")) return;
-  try { await deleteDoc(msgRef(m.id)); }
+  try { await deleteDoc(msgRef(m.id)); if (m.vpath) deleteObject(sref(storage, m.vpath)).catch(() => {}); }
   catch (e) { fail("تعذّر مسح الرسالة (" + (e.code || "خطأ") + ")."); }
 };
 
@@ -793,18 +849,19 @@ $("rb-x").onclick = clearReply;
 })();
 
 /* ---------- الإرسال ---------- */
-function sendMsg(extra) {
+function sendMsg(extra, r = room) {
   const data = { text: "", uid: me.uid, name: myName(), createdAt: serverTimestamp(), ...extra };
-  if (replying) data.replyTo = replying;
-  clearReply(); stick = true;
+  if (replying && r === room) data.replyTo = replying;
+  if (r === room) { clearReply(); stick = true; }
   // بدون await: عند انقطاع الإنترنت تُحفظ الرسالة محليًا وتُرسل لاحقًا
-  addDoc(collection(db, ...path()), data)
+  addDoc(collection(db, ...path(r)), data)
     .catch(() => { $("status").className = "off"; $("status").textContent = "تعذّر إرسال الرسالة. ليس لديك صلاحية في هذه الغرفة."; });
 }
 $("f").onsubmit = e => {
   e.preventDefault();
   const text = $("t").value.trim();
   if (!text) return;
+  if (!isAdmin() && hasBad(text)) return fail("رسالتك تحتوي على كلمات غير مسموحة.");
   $("t").value = "";
   sendMsg({ text });
 };
@@ -1149,6 +1206,135 @@ $("c-cam").onclick = () => {
   const t = call && call.stream.getVideoTracks()[0]; if (!t) return;
   t.enabled = !t.enabled; $("c-cam").textContent = t.enabled ? "📷" : "🚫"; $("c-cam").classList.toggle("off", !t.enabled);
 };
+
+/* ---------- كلمات ممنوعة (فلتر بسيط على الجهاز) ---------- */
+// عدّل هذه القائمة كما تشاء. المشرف غير معني بالفلتر.
+const norm = s => String(s).toLowerCase().normalize("NFKD").replace(/[̀-ًͯ-ٟـ]/g, "").replace(/ى/g, "ي").replace(/ة/g, "ه");
+const BAD_WORDS = new Set(["قحبة", "قحاب", "شرموطة", "زبي", "كسمك", "نيك", "منيوك",
+  "fuck", "fucking", "shit", "bitch", "putain", "merde", "salope", "connard", "pute", "zebi", "9ahba", "qahba"].map(norm));
+const hasBad = text => norm(text).split(/[^\p{L}\p{N}]+/u).some(w => w && (BAD_WORDS.has(w) || (w.startsWith("ال") && BAD_WORDS.has(w.slice(2)))));
+
+/* ---------- الإبلاغ وعرض الرسائل المبلغ عنها (للمشرف) ---------- */
+let onlyFlagged = false;
+$("sh-rep").onclick = () => {
+  const m = current; closeSheet();
+  if (!m || m.uid === me.uid) return;
+  if (!confirm("الإبلاغ عن هذه الرسالة للمشرف؟")) return;
+  updateDoc(msgRef(m.id), { ["reports." + me.uid]: true })
+    .then(() => { $("status").className = ""; $("status").textContent = "تم إرسال البلاغ للمشرف. شكرا."; })
+    .catch(e => fail("تعذّر إرسال البلاغ (" + (e.code || "خطأ") + ")."));
+};
+$("flt").onclick = () => { onlyFlagged = !onlyFlagged; $("flt").classList.toggle("on", onlyFlagged); openRoom(room); };
+
+/* ---------- المتصلون الآن ---------- */
+// كل مستخدم يكتب وثيقة presence/{uid} كل دقيقتين وهو فاتح التطبيق. القائمة تُجلب فقط عند فتح النافذة لتوفير الحصة المجانية.
+const ONLINE_MS = 240000, BEAT_MS = 120000;
+let hbTimer = null, onTimer = null, onOpen = false, onReq = 0;
+const presRef = () => doc(db, "presence", me.uid);
+function beat(on = true) {
+  if (!me) return Promise.resolve();
+  return setDoc(presRef(), { on, last: serverTimestamp(), name: myName() }, { merge: true }).catch(() => {});
+}
+function startPresence() {
+  stopPresence(); beat(true);
+  hbTimer = setInterval(() => { if (!document.hidden) beat(true); }, BEAT_MS);
+}
+function stopPresence() { clearInterval(hbTimer); hbTimer = null; closeOnline(); }
+document.addEventListener("visibilitychange", () => { if (me) beat(!document.hidden); });
+addEventListener("pagehide", () => { if (me) beat(false); });
+
+async function loadOnline() {
+  const my = ++onReq, box = $("on-list");
+  try {
+    const snap = await getDocs(query(collection(db, "presence"),
+      where("last", ">", Timestamp.fromMillis(Date.now() - ONLINE_MS)), limit(100)));
+    if (my !== onReq || !onOpen) return;
+    const users = snap.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.on === true && !isBlocked(u.uid));
+    users.sort((a, b) => a.uid === me.uid ? -1 : b.uid === me.uid ? 1 : (a.name || "").localeCompare(b.name || ""));
+    $("on-title").textContent = "المتصلون الآن (" + users.length + ")";
+    box.textContent = "";
+    if (!users.length) { const p = document.createElement("p"); p.className = "hint"; p.textContent = "لا أحد متصل الآن."; box.appendChild(p); return; }
+    users.forEach(u => {
+      const b = document.createElement("button"); b.type = "button";
+      b.append(document.createTextNode("🟢 "), avatarEl(u.uid, u.name), document.createTextNode(u.name || "مستخدم"));
+      if (u.uid === me.uid) { b.append(document.createTextNode(" (أنت)")); b.disabled = true; }
+      else b.onclick = () => { closeOnline(); startDm(u.uid, u.name); };
+      box.appendChild(b);
+    });
+  } catch (e) {
+    if (my !== onReq || !onOpen) return;
+    box.textContent = ""; const p = document.createElement("p"); p.className = "hint";
+    p.textContent = "تعذّر تحميل المتصلين (" + (e.code || "خطأ") + ").";
+    box.appendChild(p);
+  }
+}
+function openOnline() {
+  onOpen = true; $("online").hidden = false; $("on-title").textContent = "المتصلون الآن";
+  $("on-list").textContent = "جارٍ التحميل…";
+  loadOnline(); clearInterval(onTimer); onTimer = setInterval(loadOnline, 20000);
+}
+function closeOnline() { onOpen = false; clearInterval(onTimer); onTimer = null; $("online").hidden = true; }
+$("on-open").onclick = openOnline;
+$("on-close").onclick = closeOnline;
+$("online").addEventListener("click", e => { if (e.target === $("online")) closeOnline(); });
+
+/* ---------- صور وفيديو ---------- */
+// الصورة تُضغط وتُحفظ داخل الرسالة (تعمل على الخطة المجانية). الفيديو يُرفع إلى Firebase Storage.
+const MAX_VIDEO = 25 * 1024 * 1024;
+let uploading = false;
+function compressImage(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(u);
+      for (const [max, q] of [[1024, .6], [800, .5], [640, .45], [480, .4]]) {
+        const k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+        const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(img, 0, 0, c.width, c.height);
+        const url = c.toDataURL("image/jpeg", q);
+        if (url.length <= 230000) return res(url);
+      }
+      rej(new Error("big"));
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error("img")); };
+    img.src = u;
+  });
+}
+async function sendImage(f) {
+  const r = room;
+  try { const url = await compressImage(f); sendMsg({ text: "📷 صورة", image: url }, r); }
+  catch { fail("تعذّر تجهيز هذه الصورة. جرّب صورة أخرى."); }
+}
+async function sendVideo(f) {
+  if (f.size > MAX_VIDEO) return fail("الفيديو كبير جدا (الحد الأقصى 25 ميغا).");
+  const r = room, st = $("status");
+  const ext = ((f.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5)) || "mp4";
+  const p = "chat/" + me.uid + "/" + Date.now() + "." + ext;
+  const fileRef = sref(storage, p);
+  uploading = true; st.className = "off";
+  try {
+    const task = uploadBytesResumable(fileRef, f, { contentType: f.type || "video/mp4" });
+    await new Promise((ok, ko) => task.on("state_changed",
+      s => { st.textContent = "جارٍ رفع الفيديو… " + Math.round(s.bytesTransferred / s.totalBytes * 100) + "%"; }, ko, ok));
+    const url = await getDownloadURL(fileRef);
+    sendMsg({ text: "🎬 فيديو", video: url, vpath: p }, r);
+    setStatus(false);
+  } catch (e) { fail("تعذّر رفع الفيديو (" + (e.code || "خطأ") + "). تأكد من تفعيل Firebase Storage وقواعده."); }
+  uploading = false;
+}
+$("att").onclick = () => { if (uploading) return fail("انتظر انتهاء رفع الفيديو الحالي."); $("att-file").click(); };
+$("att-file").onchange = () => {
+  const f = $("att-file").files[0]; $("att-file").value = ""; if (!f) return;
+  if (f.type.startsWith("image/")) return sendImage(f);
+  if (f.type.startsWith("video/")) return sendVideo(f);
+  fail("نوع الملف غير مدعوم. اختر صورة أو فيديو.");
+};
+const openPic = src => { $("pic-img").src = src; $("pic").hidden = false; };
+function closePic() { $("pic").hidden = true; $("pic-img").removeAttribute("src"); }
+$("pic").onclick = closePic;
+addEventListener("keydown", e => { if (e.key === "Escape") { closePic(); closeOnline(); } });
 
 /* ---------- حالة الاتصال ---------- */
 function setStatus(fromCache) {
