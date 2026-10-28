@@ -146,6 +146,59 @@
   #l-setup textarea{width:100%;height:96px;font:inherit;font-size:.75rem;direction:ltr;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px}
   #l-chat{flex:1;display:flex;flex-direction:column;min-height:0}
   #l-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:0}
+
+/* ===== واجهة محسّنة للهاتف ===== */
+:root{--bg:#0b1424;--surface:#13223b;--line:#22375a;--other:#1d3254}
+body{font-size:16px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{min-height:42px;transition:transform .12s,opacity .12s,background .2s}
+button:active{transform:scale(.96)}
+header{position:sticky;top:0;z-index:5;flex-wrap:wrap;gap:8px 10px;padding:10px 14px;background:rgba(19,34,59,.94);backdrop-filter:blur(10px)}
+header h1{font-size:1.1rem;font-weight:700}
+header a{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.06)}
+header button{padding:6px 14px;border-radius:999px;min-height:36px;font-size:.85rem}
+#rooms{padding:10px 14px}
+#rooms button{border-radius:999px;min-height:38px;padding:7px 16px;font-size:.9rem}
+#bar{padding:10px 14px;gap:8px}
+#bar b{font-size:1.02rem}
+#call-a,#call-v{width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;font-size:1.15rem;border-color:transparent;background:rgba(255,180,84,.15)}
+#msgs{padding:14px;gap:6px}
+.m{max-width:84%;padding:9px 13px;border-radius:18px;font-size:.97rem;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+form{align-items:center;padding:10px 12px}
+#t{font-size:16px;border-radius:999px;padding:12px 16px;min-height:46px}
+form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
+#emoji,#mic{width:46px;height:46px;padding:0;border-radius:50%;font-size:1.2rem}
+#login{background:radial-gradient(circle at 50% 0,#1b3156,transparent 60%)}
+#login h2{font-size:1.5rem}
+#login button{padding:14px 26px;border-radius:999px;font-size:1rem}
+/* شاشة المكالمة */
+.bigav{width:132px;height:132px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3.4rem;font-weight:700;
+  color:var(--mine-text);background:linear-gradient(135deg,#ffcf8a,#ff9d3b);position:relative;z-index:2;box-shadow:0 0 0 0 rgba(255,180,84,.45)}
+@media (prefers-reduced-motion:no-preference){#callui:not(.live) #c-av,#in-av{animation:ring 1.8s ease-out infinite}}
+@keyframes ring{to{box-shadow:0 0 0 38px rgba(255,180,84,0)}}
+#callui{background:linear-gradient(180deg,#0e1b33,#0a1322 55%,#070d18);overflow:hidden}
+#callui .who{margin-top:8vh;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative}
+#c-name{font-size:1.6rem}
+#c-stat{font-variant-numeric:tabular-nums;color:#b9c8e4}
+#c-sound{border-radius:999px;color:#fff;border-color:#ffb454}
+#callui.video #rvid{opacity:0}
+#callui.video.rv #rvid{opacity:1}
+#callui.video.rv #c-av{display:none}
+#callui.video.rv .who{position:absolute;margin:0;top:calc(16px + env(safe-area-inset-top));inset-inline:0;pointer-events:none}
+#callui.video.rv #c-sound{pointer-events:auto}
+#lvid{transform:scaleX(-1);width:92px;height:124px;border-radius:16px;border:2px solid rgba(255,255,255,.25);box-shadow:0 6px 18px rgba(0,0,0,.5);z-index:4}
+#callui .btns{margin-top:auto;gap:22px;align-items:flex-start;padding:14px 24px;border-radius:32px;background:rgba(255,255,255,.08);backdrop-filter:blur(14px);margin-bottom:10px}
+.cb{display:flex;flex-direction:column;align-items:center;gap:6px}
+.cb small{font-size:.74rem;color:#c9d6ee}
+#callui .btns button{width:62px;height:62px;min-height:62px}
+#callui .btns button.off{background:#fff;color:#0a1322}
+/* مكالمة واردة */
+#incoming{background:linear-gradient(180deg,#0e1b33,#070d18);padding:calc(10vh + env(safe-area-inset-top)) 24px calc(7vh + env(safe-area-inset-bottom))}
+#incoming .card{background:transparent;border:0;padding:0;width:100%;height:100%;justify-content:space-between;align-items:center}
+#incoming .top{display:flex;flex-direction:column;align-items:center;gap:12px}
+#in-name{font-size:1.7rem}
+#in-kind{color:var(--muted)}
+#incoming .row{gap:72px}
+#incoming .row button{width:74px;height:74px;min-height:74px;border-radius:50%;font-size:1.7rem;padding:0}
 </style>
 </head>
 <body>
@@ -197,24 +250,27 @@
 </section>
 
 <div id="callui" hidden>
-  <video id="rvid" autoplay playsinline></video>
+  <video id="rvid" autoplay playsinline muted></video>
+  <audio id="raud" autoplay></audio>
   <video id="lvid" autoplay playsinline muted></video>
-  <div class="who"><b id="c-name"></b><span id="c-stat"></span></div>
-  <div class="avatar" aria-hidden="true">👤</div>
+  <div class="who">
+    <div id="c-av" class="bigav" aria-hidden="true"></div>
+    <b id="c-name"></b><span id="c-stat"></span>
+    <button id="c-sound" type="button" class="ghost" hidden>🔊 اضغط لتشغيل الصوت</button>
+  </div>
   <div class="btns">
-    <button id="c-mute" type="button" aria-label="كتم الميكروفون">🎙</button>
-    <button id="c-cam" type="button" aria-label="الكاميرا">📷</button>
-    <button id="c-end" type="button" aria-label="إنهاء المكالمة">📵</button>
+    <div class="cb"><button id="c-mute" type="button" aria-label="كتم الميكروفون">🎙</button><small>كتم</small></div>
+    <div class="cb"><button id="c-cam" type="button" aria-label="الكاميرا">📷</button><small>الكاميرا</small></div>
+    <div class="cb"><button id="c-end" type="button" aria-label="إنهاء المكالمة">📵</button><small>إنهاء</small></div>
   </div>
 </div>
 
 <div id="incoming" hidden>
   <div class="card" role="alertdialog" aria-label="مكالمة واردة">
-    <b id="in-name" style="font-size:1.2rem"></b>
-    <span id="in-kind" style="color:var(--muted)"></span>
+    <div class="top"><div id="in-av" class="bigav" aria-hidden="true"></div><b id="in-name"></b><span id="in-kind"></span></div>
     <div class="row">
-      <button id="in-no" type="button" class="no">رفض</button>
-      <button id="in-ok" type="button" class="ok">قبول</button>
+      <div class="cb"><button id="in-no" type="button" class="no" aria-label="رفض">📵</button><small>رفض</small></div>
+      <div class="cb"><button id="in-ok" type="button" class="ok" aria-label="قبول">📞</button><small>قبول</small></div>
     </div>
   </div>
 </div>
@@ -329,7 +385,7 @@ onAuthStateChanged(auth, async u => {
       if (ch.type === "removed") { if (incoming && incoming.id === ch.doc.id) hideIncoming(); return; }
       if (isBlocked(d.caller)) { updateDoc(doc(db, "calls", ch.doc.id), { status: "declined" }).catch(() => {}); return; }
       const t = d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : Date.now();
-      if (Date.now() - t > 45000) return;
+      if (Math.abs(Date.now() - t) > 90000) return;
       if (call || incoming) { updateDoc(doc(db, "calls", ch.doc.id), { status: "declined" }).catch(() => {}); return; }
       showIncoming(ch.doc.id, d);
     }));
@@ -912,41 +968,63 @@ $("rc-ok").onclick = () => stopRec(true);
 // خوادم STUN مجانية. لتحسين الاتصال على الشبكات الصعبة أضف خادم TURN هنا، مثال:
 // , { urls: "turn:YOUR_TURN_HOST:443?transport=tcp", username: "USER", credential: "PASS" }
 const ICE_SERVERS = [
-  { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }
+  { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.cloudflare.com:3478"] }
+  // مهم لشبكات الهاتف (Maroc Telecom / Inwi / Orange): أضف خادم TURN هنا حتى تنجح المكالمة بين شبكتين مختلفتين
+  // , { urls: ["turn:YOUR_HOST:443?transport=tcp", "turns:YOUR_HOST:443?transport=tcp"], username: "USER", credential: "PASS" }
 ];
 let call = null, incoming = null, ringTimer = null;
 const callRef = id => doc(db, "calls", id);
 const mediaFor = video => navigator.mediaDevices.getUserMedia({ audio: true, video: video ? { facingMode: "user" } : false });
 const plain = o => JSON.parse(JSON.stringify(o));
 
+const setCallStat = (c, t) => { if (call === c) $("c-stat").textContent = t; };
+function markConnected(c) {
+  if (call !== c || c.connected) return;
+  c.connected = true; clearTimeout(c.timer); c.startedAt = Date.now();
+  $("callui").classList.add("live"); setCallStat(c, "0:00");
+}
+function playRemote() {
+  $("rvid").play().catch(() => {});
+  $("raud").play().then(() => { $("c-sound").hidden = true; }).catch(() => { $("c-sound").hidden = false; });
+}
 function newCall(id, stream, video, role, name) {
   const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-  const c = { id, pc, stream, video, role, name, unsubs: [], pend: [], timer: null, tick: null, startedAt: 0 };
+  const c = { id, pc, stream, video, role, name, unsubs: [], pend: [], timer: null, tick: null, startedAt: 0, connected: false, answered: false };
   stream.getTracks().forEach(t => pc.addTrack(t, stream));
+  const remote = new MediaStream();
+  $("raud").srcObject = remote; $("rvid").srcObject = remote;
   pc.ontrack = e => {
-    const v = $("rvid");
-    if (e.streams[0] && v.srcObject !== e.streams[0]) v.srcObject = e.streams[0];
-    v.play().catch(() => {});
+    if (!remote.getTracks().includes(e.track)) remote.addTrack(e.track);
+    e.track.onunmute = () => { markConnected(c); if (e.track.kind === "video") $("callui").classList.add("rv"); };
+    e.track.onmute = () => { if (e.track.kind === "video") $("callui").classList.remove("rv"); };
+    playRemote();
   };
-  pc.onconnectionstatechange = () => {
+  $("raud").onplaying = $("rvid").onplaying = () => markConnected(c);
+  const upd = () => {
     if (call !== c) return;
-    const st = pc.connectionState;
-    if (st === "connected") { clearTimeout(c.timer); if (!c.startedAt) c.startedAt = Date.now(); $("c-stat").textContent = "0:00"; }
-    else if (st === "disconnected") $("c-stat").textContent = "الاتصال ضعيف…";
-    else if (st === "failed") endCall(true, "تعذّر الاتصال. قد تحتاج الشبكة إلى خادم TURN.");
+    const st = pc.connectionState || pc.iceConnectionState;
+    if (st === "connected" || st === "completed") markConnected(c);
+    else if (st === "failed") endCall(true, "تعذّر الاتصال. جرّب Wi‑Fi أو شبكة أخرى، أو أضف خادم TURN.");
   };
+  pc.onconnectionstatechange = upd; pc.oniceconnectionstatechange = upd;
   call = c;
   return c;
 }
 function showCallUI(c, status) {
-  $("callui").hidden = false;
-  $("callui").classList.toggle("video", !!c.video);
+  const u = $("callui");
+  u.hidden = false; u.classList.remove("live", "rv"); u.classList.toggle("video", !!c.video);
   $("c-name").textContent = c.name || "مستخدم";
-  $("c-stat").textContent = status;
-  $("c-cam").style.display = c.video ? "" : "none";
+  $("c-av").textContent = (c.name || "?").trim().slice(0, 1).toUpperCase();
+  $("c-stat").textContent = status; $("c-sound").hidden = true;
+  $("c-cam").parentElement.style.display = c.video ? "" : "none";
   $("c-mute").textContent = "🎙"; $("c-cam").textContent = "📷";
+  $("c-mute").classList.remove("off"); $("c-cam").classList.remove("off");
   $("lvid").srcObject = c.video ? c.stream : null;
-  c.tick = setInterval(() => { if (c.startedAt && c.pc.connectionState === "connected") $("c-stat").textContent = fmtTime((Date.now() - c.startedAt) / 1000); }, 1000);
+  c.tick = setInterval(() => {
+    if (!c.connected) return;
+    const st = c.pc.connectionState || c.pc.iceConnectionState;
+    setCallStat(c, st === "disconnected" ? "الاتصال ضعيف…" : fmtTime((Date.now() - c.startedAt) / 1000));
+  }, 1000);
 }
 function addCand(c, j) {
   if (!c.pc.remoteDescription) { c.pend.push(j); return; }
@@ -969,7 +1047,7 @@ async function startCall(video) {
   const ref = doc(collection(db, "calls"));
   const c = newCall(ref.id, stream, video, "caller", room.name);
   const buf = []; let made = false;
-  const sendCand = j => addDoc(collection(ref, "callerCandidates"), j).catch(() => {});
+  const sendCand = j => addDoc(collection(ref, "callerCandidates"), j).catch(e => console.warn("callerCandidates:", e.code));
   c.pc.onicecandidate = e => { if (!e.candidate) return; const j = plain(e.candidate); made ? sendCand(j) : buf.push(j); };
   showCallUI(c, "جارٍ الاتصال…");
   try {
@@ -980,15 +1058,19 @@ async function startCall(video) {
     await p;
   } catch (e) { endCall(false, "تعذّر بدء المكالمة (" + (e.code || "خطأ") + ")."); return; }
   if (call !== c) return;
+  setCallStat(c, "يرن…");
   c.unsubs.push(onSnapshot(ref, snap => {
     const d = snap.data(); if (!d || call !== c) return;
-    if (d.answer && !c.pc.currentRemoteDescription) c.pc.setRemoteDescription(d.answer).then(() => flushCands(c)).catch(() => {});
+    if (d.answer && !c.answered) {
+      c.answered = true; if (!c.connected) setCallStat(c, "جارٍ الربط…");
+      c.pc.setRemoteDescription(d.answer).then(() => flushCands(c)).catch(e => console.warn("answer:", e));
+    }
     if (d.status === "declined") endCall(false, "تم رفض المكالمة.");
     else if (d.status === "ended") endCall(false);
   }));
   c.unsubs.push(onSnapshot(collection(ref, "calleeCandidates"),
     snap => snap.docChanges().forEach(ch => { if (ch.type === "added") addCand(c, ch.doc.data()); })));
-  c.timer = setTimeout(() => { if (call === c && c.pc.connectionState !== "connected") endCall(true, "لم يتم الرد على المكالمة."); }, 40000);
+  c.timer = setTimeout(() => { if (call === c && !c.connected) endCall(true, c.answered ? "تعذّر الاتصال بين الجهازين." : "لم يتم الرد على المكالمة."); }, 40000);
 }
 
 async function acceptIncoming() {
@@ -1002,8 +1084,8 @@ async function acceptIncoming() {
   if (call) { stream.getTracks().forEach(t => t.stop()); return; }
   unlockAudio();
   const c = newCall(inc.id, stream, inc.video, "callee", inc.callerName);
-  c.pc.onicecandidate = e => { if (e.candidate) addDoc(collection(ref, "calleeCandidates"), plain(e.candidate)).catch(() => {}); };
-  showCallUI(c, "جارٍ الاتصال…");
+  c.pc.onicecandidate = e => { if (e.candidate) addDoc(collection(ref, "calleeCandidates"), plain(e.candidate)).catch(err => console.warn("calleeCandidates:", err.code)); };
+  showCallUI(c, "جارٍ الربط…");
   try {
     await c.pc.setRemoteDescription(inc.offer);
     const ans = await c.pc.createAnswer(); await c.pc.setLocalDescription(ans);
@@ -1013,7 +1095,7 @@ async function acceptIncoming() {
   c.unsubs.push(onSnapshot(collection(ref, "callerCandidates"),
     snap => snap.docChanges().forEach(ch => { if (ch.type === "added") addCand(c, ch.doc.data()); })));
   c.unsubs.push(onSnapshot(ref, snap => { const d = snap.data(); if (call === c && d && d.status === "ended") endCall(false); }));
-  c.timer = setTimeout(() => { if (call === c && c.pc.connectionState !== "connected") endCall(true, "تعذّر الاتصال."); }, 30000);
+  c.timer = setTimeout(() => { if (call === c && !c.connected) endCall(true, "تعذّر الاتصال بين الجهازين."); }, 30000);
 }
 
 function endCall(notify, msg) {
@@ -1024,7 +1106,8 @@ function endCall(notify, msg) {
   if (notify) updateDoc(callRef(c.id), { status: "ended" }).catch(() => {});
   try { c.pc.close(); } catch {}
   c.stream.getTracks().forEach(t => t.stop());
-  $("rvid").srcObject = null; $("lvid").srcObject = null;
+  $("rvid").srcObject = null; $("raud").srcObject = null; $("lvid").srcObject = null;
+  $("callui").classList.remove("live", "rv"); $("c-sound").hidden = true;
   $("callui").hidden = true;
   if (msg) fail(msg);
 }
@@ -1041,6 +1124,7 @@ function stopRing() { clearInterval(ringTimer); ringTimer = null; if (navigator.
 function showIncoming(id, d) {
   incoming = { id, ...d };
   $("in-name").textContent = d.callerName || "مستخدم";
+  $("in-av").textContent = (d.callerName || "?").trim().slice(0, 1).toUpperCase();
   $("in-kind").textContent = d.video ? "📹 مكالمة فيديو واردة" : "📞 مكالمة صوتية واردة";
   $("incoming").hidden = false;
   stopRing(); ringOnce(); ringTimer = setInterval(ringOnce, 2000);
@@ -1052,13 +1136,15 @@ $("call-v").onclick = () => startCall(true);
 $("in-ok").onclick = acceptIncoming;
 $("in-no").onclick = () => { const inc = incoming; hideIncoming(); if (inc) updateDoc(callRef(inc.id), { status: "declined" }).catch(() => {}); };
 $("c-end").onclick = () => endCall(true);
+$("c-sound").onclick = playRemote;
 $("c-mute").onclick = () => {
   const t = call && call.stream.getAudioTracks()[0]; if (!t) return;
-  t.enabled = !t.enabled; $("c-mute").textContent = t.enabled ? "🎙" : "🔇";
+  t.enabled = !t.enabled; $("c-mute").textContent = t.enabled ? "🎙" : "🔇"; $("c-mute").classList.toggle("off", !t.enabled);
+  
 };
 $("c-cam").onclick = () => {
   const t = call && call.stream.getVideoTracks()[0]; if (!t) return;
-  t.enabled = !t.enabled; $("c-cam").textContent = t.enabled ? "📷" : "🚫";
+  t.enabled = !t.enabled; $("c-cam").textContent = t.enabled ? "📷" : "🚫"; $("c-cam").classList.toggle("off", !t.enabled);
 };
 
 /* ---------- حالة الاتصال ---------- */
