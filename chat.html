@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>دردشة Unfollow Radar</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b1424">
 <style>
   :root{
     --bg:#0f1b2d; --surface:#172740; --line:#25385a; --text:#eaf0fa; --muted:#8fa3c4;
@@ -206,6 +208,7 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
   <h1>دردشة Unfollow Radar</h1>
   <a href="./index.html">رجوع للأداة</a>
   <a href="./chess.html">♟ شطرنج</a>
+  <button id="inst" class="ghost" style="display:none">⬇️ تثبيت التطبيق</button>
   <button id="loc-open" class="ghost">📡 قريب</button>
   <button id="me-open" class="ghost" style="display:none">👤 حسابي</button>
   <button id="out" class="ghost" style="display:none">خروج</button>
@@ -1214,6 +1217,22 @@ $("l-copy").onclick=async()=>{const v=$("l-out").value;try{await navigator.clipb
 $("l-share").onclick=()=>{const v=$("l-out").value;if(navigator.share)navigator.share({text:v}).catch(()=>{});else $("l-copy").click();};
 $("l-f").onsubmit=e=>{e.preventDefault();const v=$("l-t").value.trim();if(!v||!dc||dc.readyState!=="open")return;dc.send(JSON.stringify({t:v}));add(v,true);$("l-t").value="";};
 $("l-end").onclick=()=>{try{pc.close()}catch{}$("l-chat").hidden=true;$("l-setup").hidden=false;$("l-step").hidden=true;};
+})();
+</script>
+<script>
+(() => {
+  const btn = document.getElementById("inst");
+  if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) return;
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  let ev = null;
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); ev = e; btn.style.display = ""; });
+  addEventListener("appinstalled", () => { btn.style.display = "none"; ev = null; });
+  if (ios) btn.style.display = "";
+  btn.onclick = async () => {
+    if (ev) { ev.prompt(); await ev.userChoice.catch(() => {}); ev = null; btn.style.display = "none"; }
+    else alert(ios ? "فـ iPhone: ضغط على زر المشاركة (⬆️) فـ Safari، من بعد «إضافة إلى الشاشة الرئيسية»." : "افتح قائمة المتصفح (⋮) واختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».");
+  };
 })();
 </script>
 </body>

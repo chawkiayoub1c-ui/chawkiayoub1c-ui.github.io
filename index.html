@@ -67,42 +67,6 @@ html[dir=rtl] .row .n{text-align:right}html[dir=ltr] .row .n{text-align:left}
 .share{text-align:center}.share .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.share button{padding:12px 20px}.share .alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;z-index:99;opacity:0;pointer-events:none;transition:opacity .2s}#toast.on{opacity:1}
 #chatBtn{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;padding:12px 18px;border-radius:999px;background:var(--acc);color:var(--on);font-weight:800;font-size:15px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}#chatBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-
-/* ===== App-like mobile layout ===== */
-html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-main{padding:0 14px 24px}
-.bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 -14px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.bar::before{content:"Unfollow Radar";font-weight:800;font-size:17px;direction:ltr;color:var(--ink)}
-#lang{min-height:40px;border-radius:999px;padding:6px 14px;font-weight:600}
-.hero{padding:14px 0 22px}
-.hero-art{width:min(210px,56vw)}
-h1{font-size:28px}
-h2{font-size:19px}
-section{margin-top:22px}
-.cta{display:block;width:100%;max-width:420px;margin:6px auto 0;padding:15px 20px;border-radius:16px;font-size:17px}
-.card,details,.steps li{border-radius:20px}
-.card{padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-.steps li{padding:12px 14px}
-.drop label{flex-direction:column;align-items:stretch;gap:8px;min-width:0}
-.drop input[type=file]{width:100%;max-width:100%;min-width:0;font-size:13px;color:var(--mute);padding:8px;border:1.5px dashed var(--line);border-radius:14px;background:var(--bg)}
-.drop input[type=file]::file-selector-button{font:inherit;font-weight:800;font-size:14px;border:0;border-radius:10px;padding:9px 14px;margin-inline-end:10px;background:var(--acc);color:var(--on);cursor:pointer}
-button{min-height:48px;border-radius:14px}
-#go{width:100%;font-size:17px}
-.tools{gap:8px}
-.tools button{min-height:40px}
-.stats div{min-width:calc(50% - 8px);border-radius:14px}
-#q{min-height:46px;border-radius:14px}
-.row{padding:12px 14px;min-height:56px}
-.row a{padding:8px 12px;border-radius:10px;background:var(--bg)}
-.row input{width:24px;height:24px}
-.share .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.share button{width:100%;padding:12px 8px}
-footer{margin-top:28px}
-footer a{display:inline-block;padding:4px 2px}
-#chatBtn{left:50%;right:auto;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));min-height:48px;display:flex;align-items:center;gap:6px;padding:12px 26px;white-space:nowrap;max-width:calc(100vw - 28px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
-#toast{bottom:calc(78px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 28px);text-align:center}
-@media (min-width:700px){.bar{margin:0;border-radius:0 0 16px 16px}main{padding:0 16px 24px}}
 </style>
 </head>
 <body>
@@ -378,6 +342,31 @@ if(GT)loadGT();
 </script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+<style>
+#instBtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;padding:12px 18px;border-radius:999px;background:var(--card);color:var(--ink);border:1.5px solid var(--acc);font:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#instBtn[hidden]{display:none}#instBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+<button id="instBtn" type="button" hidden>⬇️ <span id="instTxt"></span></button>
+<script>
+(function(){
+  var b=document.getElementById('instBtn'),tx=document.getElementById('instTxt'),sel=document.getElementById('lang'),ev=null;
+  if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)return;
+  var T={ar:'تثبيت التطبيق',fr:"Installer l'app",en:'Install app'};
+  var H={ar:'فـ iPhone: زر المشاركة ⬆️ فـ Safari ثم «إضافة إلى الشاشة الرئيسية».',fr:"Sur iPhone : bouton Partager ⬆️ dans Safari, puis « Sur l'écran d'accueil ».",en:'On iPhone: tap Share ⬆️ in Safari, then “Add to Home Screen”.'};
+  var M={ar:'افتح قائمة المتصفح (⋮) واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».',fr:"Ouvrez le menu du navigateur (⋮) puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».",en:'Open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.'};
+  var ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  function lg(){var l=(sel&&sel.value)||document.documentElement.lang||'ar';return T[l]?l:'en'}
+  function up(){tx.textContent=T[lg()]}
+  if(sel)sel.addEventListener('change',up);up();
+  addEventListener('beforeinstallprompt',function(e){e.preventDefault();ev=e;b.hidden=false});
+  addEventListener('appinstalled',function(){b.hidden=true;ev=null});
+  if(ios)b.hidden=false;
+  b.onclick=function(){
+    if(ev){ev.prompt();ev.userChoice.then(function(){ev=null;b.hidden=true},function(){});}
+    else alert((ios?H:M)[lg()]);
+  };
+})();
 </script>
 <a href="chat.html" id="chatBtn">💬 <span id="chatTxt">دردشة</span></a>
 <script>
