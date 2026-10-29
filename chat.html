@@ -388,8 +388,8 @@ const db =initializeFirestore(app, {
 const $ = id => document.getElementById(id);
 
 /* ---------- الإشعارات (FCM + Cloudflare Worker) ---------- */
-const PUSH_URL = "";   // رابط الـ Worker، مثال: https://unfollow-push.xxxx.workers.dev
-const VAPID_KEY = "";  // المفتاح العام: Firebase ← Project settings ← Cloud Messaging ← Web Push certificates
+const PUSH_URL = "https://unfollow-push.chawkiayoub1c.workers.dev";   // رابط الـ Worker، مثال: https://unfollow-push.xxxx.workers.dev
+const VAPID_KEY = "BKx0ygTurGTlWsc5BnoVXAIl3jy22uASv1U82FWSds7r149tU-KG5c_kX5LR39A-g2spkmp7N617hKArCOtuK1M";  // المفتاح العام: Firebase ← Project settings ← Cloud Messaging ← Web Push certificates
 const pushOn = () => !!PUSH_URL && !!VAPID_KEY;
 async function pushSupported() {
   try { return pushOn() && "Notification" in window && "serviceWorker" in navigator && await msgSupported(); }
