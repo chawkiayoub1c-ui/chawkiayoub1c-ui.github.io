@@ -226,6 +226,7 @@ form button[type=submit]{border-radius:999px;min-height:46px;padding:0 20px}
   <a href="./index.html">رجوع للأداة</a>
   <a href="./chess.html">♟ شطرنج</a>
   <button id="inst" class="ghost" style="display:none">⬇️ تثبيت التطبيق</button>
+  <button id="push-btn" class="ghost" style="display:none">🔔 فعّل الإشعارات</button>
   <button id="on-open" class="ghost" style="display:none">🟢 المتصلون</button>
   <button id="loc-open" class="ghost">📡 قريب</button>
   <button id="me-open" class="ghost" style="display:none">👤 حسابي</button>
@@ -365,6 +366,8 @@ import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getStorage, ref as sref, uploadBytesResumable, getDownloadURL, deleteObject }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+import { getMessaging, getToken, isSupported as msgSupported }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5_-Qg0XcIVzaP2_iljrhSFJIrYOQP69k",
@@ -383,6 +386,54 @@ const db =initializeFirestore(app, {
 });
 
 const $ = id => document.getElementById(id);
+
+/* ---------- الإشعارات (FCM + Cloudflare Worker) ---------- */
+const PUSH_URL = "";   // رابط الـ Worker، مثال: https://unfollow-push.xxxx.workers.dev
+const VAPID_KEY = "";  // المفتاح العام: Firebase ← Project settings ← Cloud Messaging ← Web Push certificates
+const pushOn = () => !!PUSH_URL && !!VAPID_KEY;
+async function pushSupported() {
+  try { return pushOn() && "Notification" in window && "serviceWorker" in navigator && await msgSupported(); }
+  catch { return false; }
+}
+async function registerPush() {
+  const reg = await navigator.serviceWorker.register("./firebase-messaging-sw.js", { scope: "./fcm-push-scope/" });
+  const token = await getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+  if (token) await setDoc(doc(db, "push", me.uid, "t", token), { token, ts: serverTimestamp() });
+}
+async function setupPush(ask) {
+  const b = $("push-btn");
+  if (!me || !(await pushSupported())) { b.style.display = "none"; return; }
+  if (Notification.permission === "default" && ask) { try { await Notification.requestPermission(); } catch {} }
+  if (Notification.permission === "granted") {
+    b.style.display = "none";
+    try { await registerPush(); }
+    catch (e) { fail("تعذّر تفعيل الإشعارات (" + (e.code || e.message || "خطأ") + ")."); }
+  } else b.style.display = "";
+}
+$("push-btn").onclick = () => {
+  if (Notification.permission === "denied") return alert("الإشعارات مبلوكة. فعّلها من إعدادات الموقع فالمتصفح (أيقونة القفل جنب الرابط).");
+  setupPush(true);
+};
+async function notify(body) {
+  if (!pushOn() || !me) return;
+  try {
+    const idt = await me.getIdToken();
+    fetch(PUSH_URL, { method: "POST", keepalive: true,
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + idt },
+      body: JSON.stringify(body) }).catch(() => {});
+  } catch {}
+}
+function deepRoom(q) {
+  const dm = q.get("dm"), g = q.get("g");
+  if (dm) return { type: "dm", id: dm, name: q.get("n") || "محادثة" };
+  if (g) return { type: "group", id: g, name: q.get("n") || "مجموعة" };
+  return null;
+}
+if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => {
+  if (!e.data || !e.data.go || !me) return;
+  const r = deepRoom(new URL(e.data.go, location.href).searchParams);
+  if (r) openRoom(r);
+});
 let me = null, room = { type: "public", id: null, name: "الغرفة العامة" };
 let unsubMsgs = null, unsubGroups = null, unsubDms = null, unsubCalls = null, groups = [], dms = [];
 
@@ -413,7 +464,7 @@ onAuthStateChanged(auth, async u => {
   $("flt").style.display = "none"; $("flt").classList.remove("on"); onlyFlagged = false;
   stopPresence();
   if (unsubMsgs) unsubMsgs(); if (unsubGroups) unsubGroups(); if (unsubDms) unsubDms(); if (unsubCalls) unsubCalls(); hideIncoming(); endCall(true);
-  if (!u) return;
+  if (!u) { $("push-btn").style.display = "none"; return; }
   loadBlocked();
   await loadProfile(u);
   startPresence();
@@ -435,7 +486,8 @@ onAuthStateChanged(auth, async u => {
       if (call || incoming) { updateDoc(doc(db, "calls", ch.doc.id), { status: "declined" }).catch(() => {}); return; }
       showIncoming(ch.doc.id, d);
     }));
-  openRoom({ type: "public", id: null, name: "الغرفة العامة" });
+  openRoom(deepRoom(new URLSearchParams(location.search)) || { type: "public", id: null, name: "الغرفة العامة" });
+  setupPush(false);
 });
 
 /* ---------- الغرف ---------- */
@@ -855,6 +907,7 @@ function sendMsg(extra, r = room) {
   if (r === room) { clearReply(); stick = true; }
   // بدون await: عند انقطاع الإنترنت تُحفظ الرسالة محليًا وتُرسل لاحقًا
   addDoc(collection(db, ...path(r)), data)
+    .then(() => { if (r.type !== "public") notify({ kind: "msg", room: r.type, id: r.id, name: myName(), text: String(data.text || "").slice(0, 100) }); })
     .catch(() => { $("status").className = "off"; $("status").textContent = "تعذّر إرسال الرسالة. ليس لديك صلاحية في هذه الغرفة."; });
 }
 $("f").onsubmit = e => {
@@ -1116,6 +1169,7 @@ async function startCall(video) {
       status: "ringing", offer: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
     made = true; buf.splice(0).forEach(sendCand);
     await p;
+    notify({ kind: "call", id: ref.id, name: myName() });
   } catch (e) { endCall(false, "تعذّر بدء المكالمة (" + (e.code || "خطأ") + ")."); return; }
   if (call !== c) return;
   setCallStat(c, "يرن…");
