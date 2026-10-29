@@ -25,27 +25,34 @@ button.g{background:transparent;color:var(--muted);border:1px solid var(--line)}
 .lm{box-shadow:inset 0 0 0 100px rgba(255,200,0,.28)}
 .dot::after{content:"";width:28%;height:28%;border-radius:50%;background:rgba(20,60,20,.45);position:absolute}
 .cap{box-shadow:inset 0 0 0 4px rgba(200,40,40,.7)}
-.row{display:flex;gap:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .tabs{display:flex;gap:8px;width:var(--s)}.tabs button{flex:1}
 #on-ui{width:var(--s);display:none;flex-direction:column;gap:10px}
 #wl{display:flex;flex-direction:column;gap:6px}
 #wl .it{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 #wl .it b{flex:1;font-weight:600}
 .hint{color:var(--muted);font-size:.82rem;line-height:1.6}
+#vs{width:100%;text-align:center}
 </style>
 </head>
 <body>
-<header><h1>♟ شطرنج ضد الحاسوب</h1><a href="./chat.html">رجوع للدردشة</a></header>
+<header><h1>♟ شطرنج ضد الحاسوب</h1><button id="sn" type="button" class="g" title="صوت اللعبة">🔊</button><a href="./chat.html">رجوع للدردشة</a></header>
 <div class="tabs"><button id="m-ai" type="button">ضد الحاسوب</button><button id="m-on" type="button" class="g">أونلاين مع الأصدقاء</button></div>
 <div id="st"></div>
 <div id="on-ui"><button id="jn" type="button">🙋 أريد اللعب</button><p class="hint">القائمة مرتبة حسب من انتظر أولا. اضغط «ابدأ اللعب» قدام أي شخص لتبدأ مباراة معه.</p><div id="wl"></div></div>
 <div id="bd" role="grid" aria-label="رقعة الشطرنج"></div>
-<div class="row" id="gm-ui" style="display:none"><button id="gx" type="button" class="g">رجوع للقائمة (استسلام)</button></div>
+<div class="row" id="gm-ui" style="display:none">
+  <button id="mic" type="button">🎙️ تفعيل المايك</button>
+  <button id="rc" type="button" class="g" title="إعادة الاتصال الصوتي">🔄</button>
+  <button id="gx" type="button" class="g">رجوع للقائمة (استسلام)</button>
+  <p class="hint" id="vs"></p>
+</div>
 <div class="row" id="ai-ui"><button id="nw">لعبة جديدة</button><button id="un" class="g">↩ تراجع</button></div>
+<audio id="ra" autoplay playsinline></audio>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp }
+import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, arrayUnion }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const $=id=>document.getElementById(id);
 const IN=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
@@ -55,6 +62,41 @@ const DIRS={N:[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]],B:[[1,1]
 DIRS.K=DIRS.B.concat(DIRS.R);DIRS.Q=DIRS.K;
 const isW=p=>p===p.toUpperCase();
 const opp=t=>t==='w'?'b':'w';
+
+/* ---------- الأصوات (WebAudio — بدون ملفات صوتية) ---------- */
+const GameSound=(()=>{
+  let ctx=null,muted=false;
+  try{muted=localStorage.getItem('sound_muted')==='1';}catch(e){}
+  function getCtx(){
+    if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;ctx=new AC();}
+    if(ctx.state==='suspended')ctx.resume();
+    return ctx;}
+  ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>getCtx(),{once:true,passive:true}));
+  function tone(freq,start,dur,type='sine',vol=.25,slideTo=null){
+    const c=getCtx();if(!c||muted)return;
+    const t0=c.currentTime+start,osc=c.createOscillator(),gain=c.createGain();
+    osc.type=type;osc.frequency.setValueAtTime(freq,t0);
+    if(slideTo)osc.frequency.exponentialRampToValueAtTime(slideTo,t0+dur);
+    gain.gain.setValueAtTime(.0001,t0);
+    gain.gain.exponentialRampToValueAtTime(vol,t0+.01);
+    gain.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+    osc.connect(gain).connect(c.destination);osc.start(t0);osc.stop(t0+dur+.02);}
+  const S={
+    move(){tone(220,0,.09,'triangle',.3,140);},
+    capture(){tone(160,0,.14,'square',.22,70);tone(320,0,.06,'triangle',.2);},
+    castle(){tone(220,0,.08,'triangle',.3,140);tone(260,.1,.08,'triangle',.3,160);},
+    check(){tone(880,0,.12,'sawtooth',.15);tone(660,.12,.18,'sawtooth',.15);},
+    promote(){[523,659,784,1046].forEach((f,i)=>tone(f,i*.07,.12,'sine',.25));},
+    win(){[523,659,784,1046].forEach((f,i)=>tone(f,i*.12,.22,'triangle',.28));},
+    lose(){[392,330,262,196].forEach((f,i)=>tone(f,i*.16,.26,'sine',.28));},
+    draw(){tone(440,0,.2,'sine',.25);tone(440,.25,.2,'sine',.25);},
+    start(){tone(440,0,.1,'sine',.25);tone(660,.12,.16,'sine',.25);}};
+  return{
+    play(n){try{(S[n]||S.move)();}catch(e){}},
+    toggle(){muted=!muted;try{localStorage.setItem('sound_muted',muted?'1':'0');}catch(e){}return !muted;},
+    isMuted:()=>muted};})();
+$('sn').textContent=GameSound.isMuted()?'🔇':'🔊';
+$('sn').onclick=()=>{$('sn').textContent=GameSound.toggle()?'🔊':'🔇';};
 
 function init(){const b=Array(64).fill('');
   'rnbqkbnr'.split('').forEach((p,i)=>{b[i]=p;b[56+i]=p.toUpperCase();b[8+i]='p';b[48+i]='P';});
@@ -143,12 +185,29 @@ function search(s,d,a,b){
 
 let S=init(),hist=[],sel=-1,moves=[],last=null,busy=false,over=false;
 let mode='ai',my='w',flip=false,gid=null,gm=null,gUnsub=null,me=null,myNm='',joined=false,wl=[],started=false;
+let gmKey=null;
+
+/* ---------- مؤثرات الحركات ---------- */
+function sfx(prev,next,lm){
+  const cnt=s=>s.b.reduce((a,p)=>a+(p?1:0),0);
+  const fp=prev.b[lm.f],tp=next.b[lm.t];
+  let k='move';
+  if(fp&&fp.toUpperCase()==='P'&&tp&&tp.toUpperCase()!=='P')k='promote';
+  else if(fp&&fp.toUpperCase()==='K'&&Math.abs(lm.f-lm.t)===2)k='castle';
+  else if(cnt(prev)>cnt(next))k='capture';
+  if(inCheck(next)&&legal(next).length)k='check';
+  GameSound.play(k);}
+const endSnd=(k,delay)=>setTimeout(()=>GameSound.play(k),delay||0);
+function aiEnd(){
+  if(legal(S).length)return;
+  endSnd(inCheck(S)?(S.t==='w'?'lose':'win'):'draw',450);}
+const gkey=g=>g.b+g.t+(g.over?'1':'0')+(g.msg||'');
 
 function draw(){
   const cells=$('bd').children;
   for(let k=0;k<64;k++){
     const i=flip?63-k:k,e=cells[k],p=S.b[i];
-    e.textContent=p?G[p.toUpperCase()]+'\uFE0E':'';
+    e.textContent=p?G[p.toUpperCase()]+'︎':'';
     e.className='sq '+(((i>>3)+(i&7))%2?'d':'l')+(p?(isW(p)?' wp':' bp'):'')+(i===sel?' sel':'')+(last&&(i===last.f||i===last.t)?' lm':'')+(moves.some(m=>m.t===i)?(p?' cap':' dot'):'');}}
 
 function upd(){
@@ -162,11 +221,12 @@ function ai(){
   const ms=legal(S);let best=-1e9,bm=ms[0];
   ms.sort((x,y)=>(S.b[y.t]?1:0)-(S.b[x.t]?1:0));
   for(const m of ms){const v=-search(apply(S,m),2,-1e9,-best);if(v>best){best=v;bm=m;}}
-  S=apply(S,bm);last=bm;busy=false;upd();}
+  const prev=S;
+  S=apply(S,bm);last=bm;busy=false;sfx(prev,S,bm);aiEnd();upd();}
 
 function play(m){
   if(mode==='on')return push(m);
-  hist.push(S);S=apply(S,m);last=m;sel=-1;moves=[];upd();
+  hist.push(S);const prev=S;S=apply(S,m);last=m;sel=-1;moves=[];sfx(prev,S,m);aiEnd();upd();
   if(!over&&S.t==='b'){busy=true;setTimeout(ai,60);}}
 
 function tap(i){
@@ -178,7 +238,7 @@ function tap(i){
   draw();}
 
 for(let i=0;i<64;i++){const b=document.createElement('button');b.type='button';b.onclick=()=>tap(flip?63-i:i);$('bd').appendChild(b);}
-$('nw').onclick=()=>{if(busy)return;S=init();hist=[];sel=-1;moves=[];last=null;upd();};
+$('nw').onclick=()=>{if(busy)return;S=init();hist=[];sel=-1;moves=[];last=null;GameSound.play('start');upd();};
 $('un').onclick=()=>{if(busy||!hist.length)return;S=hist.pop();sel=-1;moves=[];last=null;upd();};
 /* ---------- أونلاين ---------- */
 const app=initializeApp({apiKey:"AIzaSyA5_-Qg0XcIVzaP2_iljrhSFJIrYOQP69k",authDomain:"unfollow-radar-f4508.firebaseapp.com",projectId:"unfollow-radar-f4508",appId:"1:160025889873:web:71b2bcfdfc4c8081433c70"});
@@ -193,12 +253,24 @@ function show(){
   $('gm-ui').style.display=on&&gid?'':'none';
   $('bd').style.display=(!on||gid)?'':'none';
   $('m-ai').className=on?'g':'';$('m-on').className=on?'':'g';}
-function applyGame(){
-  my=gm.white===me.uid?'w':'b';flip=my==='b';S=de(gm);last=gm.last;over=!!gm.over;sel=-1;moves=[];show();onUpd();}
+function applyGame(silent){
+  const prev=S,fresh=gmKey===null,nk=gkey(gm);
+  my=gm.white===me.uid?'w':'b';flip=my==='b';
+  const ns=de(gm);
+  if(!silent){
+    if(fresh)GameSound.play('start');
+    else if(nk!==gmKey){
+      const moved=ser(prev).b!==gm.b;
+      if(moved&&gm.last)sfx(prev,ns,gm.last);
+      if(gm.over){
+        const ended=!legal(ns).length;
+        endSnd(ended?(inCheck(ns)?'lose':'draw'):((gm.msg||'').includes('تعادل')?'draw':'win'),moved?450:0);}}}
+  gmKey=nk;
+  S=ns;last=gm.last;over=!!gm.over;sel=-1;moves=[];show();onUpd();}
 function setMode(m){
   mode=m;
   if(m==='ai'){my='w';flip=false;S=init();hist=[];sel=-1;moves=[];last=null;over=false;busy=false;show();upd();}
-  else{show();if(gid&&gm)applyGame();else onUpd();renderLobby();}}
+  else{show();if(gid&&gm)applyGame(true);else onUpd();renderLobby();}}
 function onUpd(){
   if(!gid||!gm){$('st').textContent=gid?'جارٍ فتح المباراة…':(me?(joined?'⏳ أنت في قائمة الانتظار… اضغط على شخص لتبدأ معه':'اضغط «أريد اللعب» أو تحدَّ شخصا من القائمة'):'سجّل الدخول من صفحة الدردشة للعب أونلاين');draw();return;}
   const o=gm.names[gm.players.find(x=>x!==me.uid)]||'الخصم';
@@ -208,6 +280,9 @@ function push(m){
   const n=apply(S,m),end=!legal(n).length,chk=inCheck(n);
   const data=Object.assign(ser(n),{last:{f:m.f,t:m.t},over:end,msg:end?(chk?'كش مات — فاز '+myNm+' 🏆':'تعادل 🤝'):'',updatedAt:serverTimestamp()});
   if(end)data.live=[];
+  sfx(S,n,data.last);
+  if(end)endSnd(chk?'win':'draw',450);
+  gmKey=gkey(data);
   S=n;last=data.last;over=end;sel=-1;moves=[];
   if(end)gm=Object.assign({},gm,{over:true,msg:data.msg});
   onUpd();
@@ -215,10 +290,15 @@ function push(m){
 function openGame(id){
   if(gid===id)return;
   if(gUnsub)gUnsub();
-  gid=id;gm=null;
-  gUnsub=onSnapshot(doc(db,'games',id),s=>{if(!s.exists()){closeGame();return;}gm=s.data();if(mode==='on')applyGame();},e=>{closeGame();lerr(e);});
+  rtcStop(true);
+  gid=id;gm=null;gmKey=null;
+  gUnsub=onSnapshot(doc(db,'games',id),s=>{
+    if(!s.exists()){closeGame();return;}
+    gm=s.data();
+    if(mode==='on'&&gkey(gm)!==gmKey)applyGame();
+    rtcSync();},e=>{closeGame();lerr(e);});
   setMode('on');}
-function closeGame(){if(gUnsub)gUnsub();gUnsub=null;gid=null;gm=null;over=false;show();onUpd();renderLobby();}
+function closeGame(){if(gUnsub)gUnsub();gUnsub=null;rtcStop(true);gid=null;gm=null;gmKey=null;over=false;show();onUpd();renderLobby();}
 $('gx').onclick=()=>{
   if(gm&&!over){
     if(!confirm('الخروج يعني الاستسلام. متأكد؟'))return;
@@ -250,6 +330,85 @@ setInterval(()=>{if(joined&&me)updateDoc(doc(db,'lobby',me.uid),{seen:serverTime
 addEventListener('pagehide',()=>{if(joined&&me)deleteDoc(doc(db,'lobby',me.uid)).catch(()=>{});});
 $('m-ai').onclick=()=>setMode('ai');
 $('m-on').onclick=()=>setMode('on');
+
+/* ---------- الدردشة الصوتية (WebRTC، والإشارات عبر وثيقة المباراة في Firestore) ---------- */
+const ICE={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
+let pc=null,sender=null,rtcId=0,iceDone=0,lastAns='',lastWant=0,rtcBusy=false,rrole='w';
+let micStream=null,micTrack=null,micOn=false;
+
+function updMic(){
+  $('mic').textContent=micOn?'🎙️ المايك شغّال — اضغط للكتم':(micStream?'🔇 المايك مكتوم — اضغط للتشغيل':'🎙️ تفعيل المايك');
+  const st=pc?pc.connectionState:'';
+  $('vs').textContent=!gid?'':(st==='connected'?'🟢 الاتصال الصوتي جاهز':(st==='failed'?'🔴 فشل الاتصال الصوتي — جرّب زر 🔄':'⏳ جارٍ الاتصال الصوتي…'));}
+function closePc(){
+  if(pc){pc.onicecandidate=pc.ontrack=pc.onconnectionstatechange=null;try{pc.close();}catch(e){}pc=null;}
+  $('ra').srcObject=null;iceDone=0;sender=null;}
+function rtcStop(full){
+  closePc();rtcId=0;lastAns='';lastWant=0;rtcBusy=false;
+  if(full&&micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;micTrack=null;micOn=false;}
+  updMic();}
+function mkPc(offerer){
+  closePc();
+  pc=new RTCPeerConnection(ICE);
+  if(offerer){sender=pc.addTransceiver('audio',{direction:'sendrecv'}).sender;if(micTrack)sender.replaceTrack(micTrack).catch(()=>{});}
+  pc.ontrack=e=>{$('ra').srcObject=e.streams[0]||new MediaStream([e.track]);$('ra').play().catch(()=>{});};
+  pc.onicecandidate=e=>{if(e.candidate&&gid)updateDoc(doc(db,'games',gid),{['ice_'+rrole]:arrayUnion(JSON.stringify(e.candidate))}).catch(()=>{});};
+  pc.onconnectionstatechange=updMic;
+  updMic();}
+function drainIce(){
+  const arr=(gm&&gm['ice_'+opp(rrole)])||[];
+  while(pc&&pc.remoteDescription&&iceDone<arr.length)pc.addIceCandidate(JSON.parse(arr[iceDone++])).catch(()=>{});}
+async function startOffer(){
+  const ref=doc(db,'games',gid);
+  await updateDoc(ref,{rtc_offer:null,rtc_answer:null,ice_w:[],ice_b:[]});
+  mkPc(true);
+  const id=Date.now();rtcId=id;lastAns='';
+  const o=await pc.createOffer();await pc.setLocalDescription(o);
+  await updateDoc(ref,{rtc_offer:{id,sdp:o.sdp}});}
+async function rtcSync(){
+  if(!gid||!gm||!me||rtcBusy||!window.RTCPeerConnection||gm.over)return;
+  rrole=gm.white===me.uid?'w':'b';
+  rtcBusy=true;
+  try{
+    if(rrole==='w'){
+      const want=gm.rtc_want||0;
+      if(!pc||want!==lastWant){lastWant=want;await startOffer();}
+      else{
+        const a=gm.rtc_answer;
+        if(a&&a.sdp!==lastAns){
+          lastAns=a.sdp;
+          if(a.id===rtcId){
+            if(pc.signalingState==='have-local-offer')await pc.setRemoteDescription({type:'answer',sdp:a.sdp});
+            else await startOffer();}}}}
+    else{
+      const o=gm.rtc_offer;
+      if(o&&o.id!==rtcId){
+        rtcId=o.id;mkPc(false);
+        await pc.setRemoteDescription({type:'offer',sdp:o.sdp});
+        const t=pc.getTransceivers()[0];t.direction='sendrecv';sender=t.sender;
+        if(micTrack)sender.replaceTrack(micTrack).catch(()=>{});
+        const an=await pc.createAnswer();await pc.setLocalDescription(an);
+        await updateDoc(doc(db,'games',gid),{rtc_answer:{id:o.id,sdp:an.sdp}});}}
+    drainIce();
+  }catch(e){}
+  rtcBusy=false;}
+$('mic').onclick=async()=>{
+  if(!micStream){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('vs').textContent='المتصفح لا يدعم المايك (يلزم رابط https).';return;}
+    try{
+      micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+      micTrack=micStream.getAudioTracks()[0];micOn=true;
+      if(sender)sender.replaceTrack(micTrack).catch(()=>{});
+    }catch(e){$('vs').textContent='تعذّر تشغيل المايك — اسمح للموقع باستخدامه من إعدادات المتصفح.';return;}}
+  else{micOn=!micOn;micTrack.enabled=micOn;}
+  $('ra').play().catch(()=>{});
+  updMic();};
+$('rc').onclick=()=>{
+  if(!gid||!gm)return;
+  if(rrole==='w'){if(!rtcBusy){rtcBusy=true;startOffer().catch(()=>{}).finally(()=>{rtcBusy=false;});}}
+  else updateDoc(doc(db,'games',gid),{rtc_want:Date.now()}).catch(()=>{});};
+addEventListener('pointerdown',()=>{const a=$('ra');if(a.srcObject)a.play().catch(()=>{});});
+
 onAuthStateChanged(auth,async u=>{
   me=u;
   if(!u){renderLobby();if(mode==='on')onUpd();return;}
