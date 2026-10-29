@@ -183,6 +183,7 @@ $('un').onclick=()=>{if(busy||!hist.length)return;S=hist.pop();sel=-1;moves=[];l
 /* ---------- أونلاين ---------- */
 const app=initializeApp({apiKey:"AIzaSyA5_-Qg0XcIVzaP2_iljrhSFJIrYOQP69k",authDomain:"unfollow-radar-f4508.firebaseapp.com",projectId:"unfollow-radar-f4508",appId:"1:160025889873:web:71b2bcfdfc4c8081433c70"});
 const auth=getAuth(app),db=getFirestore(app);
+const lerr=e=>{$('st').textContent='تعذّر الاتصال بقاعدة البيانات ('+((e&&e.code)||'خطأ')+'). تأكد من نشر قواعد Firestore.';};
 const ser=s=>({b:s.b.map(p=>p||'.').join(''),t:s.t,c:Object.keys(s.c).filter(k=>s.c[k]).join(''),ep:s.ep});
 const de=d=>({b:d.b.split('').map(x=>x==='.'?'':x),t:d.t,c:{K:+d.c.includes('K'),Q:+d.c.includes('Q'),k:+d.c.includes('k'),q:+d.c.includes('q')},ep:d.ep});
 function show(){
@@ -210,12 +211,12 @@ function push(m){
   S=n;last=data.last;over=end;sel=-1;moves=[];
   if(end)gm=Object.assign({},gm,{over:true,msg:data.msg});
   onUpd();
-  updateDoc(doc(db,'games',gid),data).catch(()=>{$('st').textContent='تعذّر إرسال الحركة. تأكد من قواعد Firestore والاتصال.';});}
+  updateDoc(doc(db,'games',gid),data).catch(e=>{$('st').textContent='تعذّر إرسال الحركة ('+((e&&e.code)||'خطأ')+'). تأكد من قواعد Firestore والاتصال.';});}
 function openGame(id){
   if(gid===id)return;
   if(gUnsub)gUnsub();
   gid=id;gm=null;
-  gUnsub=onSnapshot(doc(db,'games',id),s=>{if(!s.exists()){closeGame();return;}gm=s.data();if(mode==='on')applyGame();},()=>closeGame());
+  gUnsub=onSnapshot(doc(db,'games',id),s=>{if(!s.exists()){closeGame();return;}gm=s.data();if(mode==='on')applyGame();},e=>{closeGame();lerr(e);});
   setMode('on');}
 function closeGame(){if(gUnsub)gUnsub();gUnsub=null;gid=null;gm=null;over=false;show();onUpd();renderLobby();}
 $('gx').onclick=()=>{
@@ -258,11 +259,11 @@ onAuthStateChanged(auth,async u=>{
     started=true;
     onSnapshot(query(collection(db,'lobby'),orderBy('since'),limit(30)),s=>{
       wl=s.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'}))).filter(x=>x.seen&&x.seen.toMillis()>Date.now()-180000);
-      joined=wl.some(x=>x.id===me.uid);renderLobby();if(mode==='on'&&!gid)onUpd();},()=>{});
+      joined=wl.some(x=>x.id===me.uid);renderLobby();if(mode==='on'&&!gid)onUpd();},e=>lerr(e));
     onSnapshot(query(collection(db,'games'),where('live','array-contains',u.uid)),s=>{
       if(gid)return;
       const g=s.docs.find(d=>{const t=d.data({serverTimestamps:'estimate'}).updatedAt;return t&&t.toMillis()>Date.now()-6*3600e3;});
-      if(g){if(joined)deleteDoc(doc(db,'lobby',u.uid)).catch(()=>{});openGame(g.id);}},()=>{});}
+      if(g){if(joined)deleteDoc(doc(db,'lobby',u.uid)).catch(()=>{});openGame(g.id);}},e=>lerr(e));}
   renderLobby();if(mode==='on')onUpd();});
 show();
 upd();
