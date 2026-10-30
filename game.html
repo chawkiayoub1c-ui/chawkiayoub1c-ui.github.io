@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>متاهة الأسلحة</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0b0f17;color:#e8ecf4;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+canvas{display:block;background:#0b0f17}
+.panel{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,12,20,.95);padding:16px;overflow:auto;z-index:5;text-align:center}
+.panel.soft{background:rgba(8,12,20,.72)}
+.hidden{display:none!important}
+h1{margin:0 0 4px;font-size:30px}
+h2{margin:0}
+button{font:inherit;color:#fff;background:#2563eb;border:0;border-radius:12px;padding:12px 22px;font-size:17px;cursor:pointer;min-width:240px}
+button:active{transform:scale(.97)}
+button.alt{background:#334155}
+button.green{background:#16a34a}
+.seg{display:inline-flex;gap:6px}
+.seg button{min-width:0;padding:8px 18px;background:#1e293b;font-size:15px}
+.seg button.on{background:#f59e0b;color:#111}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+input{font:inherit;font-size:18px;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;text-align:center;width:220px}
+.help{font-size:13px;color:#94a3b8;max-width:420px;line-height:1.7}
+.code{font-size:44px;letter-spacing:8px;font-weight:700;color:#fbbf24;direction:ltr}
+#bMenu{position:fixed;top:8px;right:8px;z-index:4;min-width:0;padding:6px 12px;font-size:16px;background:rgba(51,65,85,.7)}
+#touch{position:fixed;inset:0;z-index:3;pointer-events:none}
+.zone{position:absolute;bottom:0;width:50%;height:60%;pointer-events:auto}
+#zl{left:0}#zr{right:0}
+.base{position:fixed;width:110px;height:110px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.07);display:none;pointer-events:none}
+.knob{position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.45);left:30px;top:30px}
+#status{color:#fbbf24;min-height:22px}
+#plist{line-height:1.9}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="cv"></canvas></div>
+<button id="bMenu" class="hidden">☰</button>
+
+<div id="touch" class="hidden">
+  <div class="zone" id="zl"></div><div class="zone" id="zr"></div>
+  <div class="base" id="bl"><div class="knob"></div></div>
+  <div class="base" id="br"><div class="knob"></div></div>
+</div>
+
+<div id="menu" class="panel">
+  <h1>🔫 متاهة الأسلحة</h1>
+  <div class="row"><span>اسمك:</span><input id="nm" maxlength="12" placeholder="اللاعب"></div>
+  <div class="row"><span>عدد اللاعبين:</span><div class="seg" id="segN"><button data-v="2" class="on">2</button><button data-v="4">4</button></div></div>
+  <div class="row"><span>صعوبة الحاسوب:</span><div class="seg" id="segD"><button data-v="easy">سهل</button><button data-v="normal" class="on">عادي</button><button data-v="hard">صعب</button></div></div>
+  <button id="bCpu">🤖 العب ضد الحاسوب</button>
+  <button id="bLocal" class="alt">👥 لاعبان على نفس الجهاز</button>
+  <button id="bOnline" class="green">🌐 أونلاين مع الناس</button>
+  <div class="help">
+    الهدف: أول من يصل إلى 10 قتلى يفوز. التقط الأسلحة من المتاهة: S بندقية صيد · M رشاش · R قناص · + علاج.<br>
+    <b>لاعب 1 / ضد الحاسوب:</b> WASD أو الأسهم للحركة، الفأرة للتصويب والنقر للإطلاق (أو Space). على الهاتف: عصا يسار للحركة وعصا يمين للتصويب والإطلاق.<br>
+    <b>لاعبان على نفس الجهاز:</b> لاعب 1 = WASD + F · لاعب 2 = الأسهم + Enter
+  </div>
+</div>
+
+<div id="online" class="panel hidden">
+  <h2>🌐 اللعب أونلاين</h2>
+  <div id="onChoice" class="row" style="flex-direction:column">
+    <button id="bCreate" class="green">إنشاء غرفة جديدة</button>
+    <div class="row"><input id="codeIn" placeholder="رمز الغرفة" maxlength="5" style="direction:ltr;text-transform:uppercase"><button id="bJoin" style="min-width:0">انضمام</button></div>
+  </div>
+  <div id="lobby" class="hidden">
+    <div>رمز الغرفة — أعطه لأصدقائك:</div>
+    <div class="code" id="roomCode">-----</div>
+    <div id="plist"></div>
+    <button id="bStart" class="green">ابدأ اللعبة</button>
+    <div class="help">الأماكن الفارغة يملؤها الحاسوب.</div>
+  </div>
+  <div id="status"></div>
+  <button id="bBack" class="alt">رجوع</button>
+</div>
+
+<div id="over" class="panel soft hidden">
+  <h1 id="overT"></h1>
+  <button id="bAgain">العب مرة أخرى</button>
+  <button id="bToMenu" class="alt">القائمة</button>
+</div>
+
+<script type="module">
+/* ====== إعداد Firebase للّعب أونلاين ======
+   انسخ القيم من إعدادات Firebase نفسها المستعملة في chat.html */
+const firebaseConfig = {
+  apiKey: "PUT_YOUR_API_KEY",
+  authDomain: "unfollow-radar-f4508.firebaseapp.com",
+  projectId: "unfollow-radar-f4508",
+  appId: "PUT_YOUR_APP_ID"
+};
+const ONLINE_READY = !firebaseConfig.apiKey.startsWith("PUT");
+
+/* ====== ثوابت ====== */
+const T=32, MW=15, MH=11, COLS=MW*2+1, ROWS=MH*2+1, W=COLS*T, H=ROWS*T, R=11, WIN=10;
+const COLORS=['#4fc3f7','#ff7043','#9ccc65','#ffd54f'];
+const WK=['pistol','shotgun','mg','sniper','health'];
+const WP={
+  pistol:{cd:.38,dmg:20,sp:560,n:1,spread:.02,ammo:-1,life:1.2,name:'مسدس'},
+  shotgun:{cd:.8,dmg:13,sp:520,n:6,spread:.28,ammo:8,life:.5,name:'بندقية صيد'},
+  mg:{cd:.1,dmg:8,sp:620,n:1,spread:.1,ammo:45,life:1.1,name:'رشاش'},
+  sniper:{cd:1.1,dmg:70,sp:1100,n:1,spread:0,ammo:5,life:1.5,name:'قناص'}
+};
+const PCOL={shotgun:'#ff9800',mg:'#e91e63',sniper:'#00e5ff',health:'#4caf50'};
+const PLET={shotgun:'S',mg:'M',sniper:'R',health:'+'};
+const DIFF={easy:{spd:.7,turn:2.2,react:.55,err:.35},normal:{spd:.85,turn:3.5,react:.3,err:.18},hard:{spd:1,turn:6,react:.12,err:.07}};
+
+const $=id=>document.getElementById(id);
+const cv=$('cv'), ctx=cv.getContext('2d'); cv.width=W; cv.height=H;
+const cfg={n:2,diff:'normal'};
+let grid=null, mazeCv=null, state=null, mode=null, mySlot=0, running=false;
+const keys={}, mouse={x:0,y:0,active:false,down:false}, lastAim={};
+const touchL={x:0,y:0}, touchR={x:0,y:0,on:false};
+const isTouch=matchMedia('(pointer:coarse)').matches;
+
+/* ====== الصوت ====== */
+let AC=null;
+function beep(f,d,t='square',v=.04){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+function sfx(k){ if(k==='shot')beep(220,.08,'square',.03); else if(k==='hit')beep(120,.1,'sawtooth',.05); else if(k==='kill'){beep(500,.1,'triangle',.06);setTimeout(()=>beep(750,.15,'triangle',.06),90)} else if(k==='pick')beep(900,.08,'sine',.05); }
+
+/* ====== المتاهة ====== */
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function genMaze(seed){
+  const r=rng(seed); grid=Array.from({length:ROWS},()=>Array(COLS).fill(1));
+  const seen=Array.from({length:MH},()=>Array(MW).fill(false)), st=[[0,0]]; seen[0][0]=true; grid[1][1]=0;
+  while(st.length){
+    const [cx,cy]=st[st.length-1], nb=[];
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nx=cx+dx,ny=cy+dy;if(nx>=0&&ny>=0&&nx<MW&&ny<MH&&!seen[ny][nx])nb.push([nx,ny,dx,dy])});
+    if(!nb.length){st.pop();continue}
+    const [nx,ny,dx,dy]=nb[Math.floor(r()*nb.length)]; seen[ny][nx]=true;
+    grid[2*cy+1+dy][2*cx+1+dx]=0; grid[2*ny+1][2*nx+1]=0; st.push([nx,ny]);
+  }
+  for(let i=0;i<MW*MH*.45;i++){ // فتح ممرات إضافية لتصبح المتاهة أقل ضيقاً
+    const cx=Math.floor(r()*(MW-1)), cy=Math.floor(r()*(MH-1));
+    if(r()<.5)grid[2*cy+1][2*cx+2]=0; else grid[2*cy+2][2*cx+1]=0;
+  }
+  mazeCv=document.createElement('canvas'); mazeCv.width=W; mazeCv.height=H; const g=mazeCv.getContext('2d');
+  g.fillStyle='#121926'; g.fillRect(0,0,W,H);
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(grid[y][x]){g.fillStyle='#2b3a55';g.fillRect(x*T,y*T,T,T);g.fillStyle='#3b4f73';g.fillRect(x*T,y*T,T,4);g.strokeStyle='#1a2438';g.strokeRect(x*T+.5,y*T+.5,T-1,T-1)}
+    else{g.strokeStyle='#171f2e';g.strokeRect(x*T+.5,y*T+.5,T-1,T-1)}
+  }
+}
+const solid=(tx,ty)=>tx<0||ty<0||tx>=COLS||ty>=ROWS||grid[ty][tx]===1;
+function collides(x,y,r){
+  for(let ty=Math.floor((y-r)/T);ty<=Math.floor((y+r)/T);ty++)for(let tx=Math.floor((x-r)/T);tx<=Math.floor((x+r)/T);tx++){
+    if(!solid(tx,ty))continue;
+    const cx=Math.max(tx*T,Math.min(x,tx*T+T)), cy=Math.max(ty*T,Math.min(y,ty*T+T));
+    if((x-cx)*(x-cx)+(y-cy)*(y-cy)<r*r)return true;
+  } return false;
+}
+function los(a,b){
+  const d=Math.hypot(b.x-a.x,b.y-a.y), n=Math.ceil(d/8);
+  for(let i=1;i<n;i++){const t=i/n;if(solid(Math.floor((a.x+(b.x-a.x)*t)/T),Math.floor((a.y+(b.y-a.y)*t)/T)))return false}
+  return true;
+}
+function bfs(sx,sy,tx,ty){
+  const key=(x,y)=>y*COLS+x, prev=new Map(); prev.set(key(sx,sy),-1); const q=[[sx,sy]];
+  for(let i=0;i<q.length;i++){
+    const [x,y]=q[i]; if(x===tx&&y===ty)break;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(solid(nx,ny)||prev.has(key(nx,ny)))continue;prev.set(key(nx,ny),key(x,y));q.push([nx,ny])}
+  }
+  if(!prev.has(key(tx,ty)))return [];
+  const path=[]; let k=key(tx,ty); while(k!==-1&&k!==key(sx,sy)){path.push([k%COLS,Math.floor(k/COLS)]);k=prev.get(k)}
+  return path.reverse();
+}
+const cellC=(cx,cy)=>[(2*cx+1)*T+T/2,(2*cy+1)*T+T/2];
+
+/* ====== حالة اللعبة ====== */
+function newState(seed,defs){
+  genMaze(seed);
+  const corners=[[0,0],[MW-1,MH-1],[MW-1,0],[0,MH-1]];
+  state={seed,players:defs.map((d,i)=>{const [x,y]=cellC(...corners[i]);return{id:i,name:d.name,color:COLORS[i],bot:!!d.bot,local:d.local||null,x,y,aim:0,hp:100,alive:true,w:'pistol',ammo:-1,score:0,cd:0,resp:0,inv:1.5,ai:{path:[],t:0,seen:0,sT:0,sd:1}}}),
+    bullets:[],pickups:[],feed:[],over:null,spawnT:3};
+  $('over').classList.add('hidden');
+}
+function respawn(p){
+  let best=null,bd=-1;
+  for(let i=0;i<14;i++){
+    const [x,y]=cellC(Math.floor(Math.random()*MW),Math.floor(Math.random()*MH));
+    let md=1e9; state.players.forEach(q=>{if(q!==p&&q.alive)md=Math.min(md,Math.hypot(q.x-x,q.y-y))});
+    if(md>bd){bd=md;best=[x,y]}
+  }
+  p.x=best[0];p.y=best[1];p.hp=100;p.alive=true;p.w='pistol';p.ammo=-1;p.inv=1.5;p.cd=.3;
+}
+function say(s){state.feed.push({s,t:performance.now()});if(state.feed.length>6)state.feed.shift()}
+
+function simulate(dt){
+  if(state.over)return;
+  const P=state.players;
+  for(const p of P){
+    if(!p.alive){p.resp-=dt;if(p.resp<=0)respawn(p);continue}
+    p.inv=Math.max(0,p.inv-dt); p.cd-=dt;
+    let inp;
+    if(p.bot)inp=botInput(p,dt);
+    else if(p.local)inp=getInput(p.local,p);
+    else inp=net.inputs[p.id]||{mx:0,my:0,aim:p.aim,fire:false};
+    let mx=+inp.mx||0,my=+inp.my||0; const l=Math.hypot(mx,my); if(l>1){mx/=l;my/=l}
+    const sp=150*(p.bot?DIFF[cfg.diff].spd:1);
+    let nx=p.x+mx*sp*dt; if(!collides(nx,p.y,R))p.x=nx;
+    let ny=p.y+my*sp*dt; if(!collides(p.x,ny,R))p.y=ny;
+    p.aim=+inp.aim||0;
+    if(inp.fire&&p.cd<=0){
+      const w=WP[p.w]; p.cd=w.cd;
+      for(let i=0;i<w.n;i++){
+        let a=p.aim+(Math.random()-.5)*2*w.spread; if(p.bot)a+=(Math.random()-.5)*2*DIFF[cfg.diff].err*.5;
+        state.bullets.push({x:p.x+Math.cos(a)*14,y:p.y+Math.sin(a)*14,vx:Math.cos(a)*w.sp,vy:Math.sin(a)*w.sp,o:p.id,dmg:w.dmg,life:w.life});
+      }
+      if(p.ammo>0){p.ammo--;if(p.ammo<=0){p.w='pistol';p.ammo=-1}}
+      sfx('shot');
+    }
+  }
+  // الرصاص
+  state.bullets=state.bullets.filter(b=>{
+    b.life-=dt; if(b.life<=0)return false;
+    const steps=Math.ceil(Math.hypot(b.vx,b.vy)*dt/8);
+    for(let i=0;i<steps;i++){
+      b.x+=b.vx*dt/steps; b.y+=b.vy*dt/steps;
+      if(solid(Math.floor(b.x/T),Math.floor(b.y/T)))return false;
+      for(const q of P){
+        if(!q.alive||q.id===b.o||q.inv>0)continue;
+        if(Math.hypot(q.x-b.x,q.y-b.y)<R+2){
+          q.hp-=b.dmg; sfx('hit');
+          if(q.hp<=0){
+            q.alive=false;q.resp=2.5;const k=P[b.o];k.score++;sfx('kill');say(k.name+' 🔫 '+q.name);
+            if(k.score>=WIN)state.over={win:k.id};
+          }
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+  // العناصر القابلة للالتقاط
+  state.spawnT-=dt;
+  if(state.spawnT<=0&&state.pickups.length<5){
+    const [x,y]=cellC(Math.floor(Math.random()*MW),Math.floor(Math.random()*MH));
+    state.pickups.push({x,y,k:['shotgun','mg','sniper','health'][Math.floor(Math.random()*4)]}); state.spawnT=5;
+  }
+  state.pickups=state.pickups.filter(pk=>{
+    for(const p of P){
+      if(!p.alive||Math.hypot(p.x-pk.x,p.y-pk.y)>16)continue;
+      if(pk.k==='health'){if(p.hp>=100)continue;p.hp=Math.min(100,p.hp+40)}
+      else{p.w=pk.k;p.ammo=WP[pk.k].ammo}
+      sfx('pick');return false;
+    } return true;
+  });
+  if(state.over)showOver();
+}
+
+/* ====== الحاسوب (الذكاء الاصطناعي) ====== */
+function botInput(p,dt){
+  const a=p.ai, D=DIFF[cfg.diff], inp={mx:0,my:0,aim:p.aim,fire:false};
+  let tgt=null,bd=1e9;
+  for(const q of state.players){if(q===p||!q.alive)continue;const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;tgt=q}}
+  if(!tgt)return inp;
+  if(los(p,tgt)){
+    a.seen+=dt;
+    const ang=Math.atan2(tgt.y-p.y,tgt.x-p.x); let d=ang-p.aim; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+    inp.aim=p.aim+Math.max(-D.turn*dt,Math.min(D.turn*dt,d));
+    if(a.seen>D.react&&Math.abs(d)<.25+D.err&&bd<480)inp.fire=true;
+    a.sT-=dt; if(a.sT<=0){a.sT=.6+Math.random();a.sd=Math.random()<.5?-1:1}
+    const perp=ang+Math.PI/2; inp.mx=Math.cos(perp)*a.sd*.8; inp.my=Math.sin(perp)*a.sd*.8;
+    if(bd>300){inp.mx+=Math.cos(ang)*.6;inp.my+=Math.sin(ang)*.6}
+    if(bd<140){inp.mx-=Math.cos(ang)*.9;inp.my-=Math.sin(ang)*.9}
+  }else{
+    a.seen=0; a.t-=dt;
+    if(a.t<=0||!a.path.length){
+      let goal=[Math.floor(tgt.x/T),Math.floor(tgt.y/T)];
+      if(p.w==='pistol'){let nd=260;for(const pk of state.pickups){const d=Math.hypot(pk.x-p.x,pk.y-p.y);if(d<nd){nd=d;goal=[Math.floor(pk.x/T),Math.floor(pk.y/T)]}}}
+      a.path=bfs(Math.floor(p.x/T),Math.floor(p.y/T),goal[0],goal[1]); a.t=.5;
+    }
+    while(a.path.length){
+      const [tx,ty]=a.path[0], cx=tx*T+T/2, cy=ty*T+T/2;
+      if(Math.hypot(cx-p.x,cy-p.y)<7){a.path.shift();continue}
+      const ang=Math.atan2(cy-p.y,cx-p.x); inp.mx=Math.cos(ang);inp.my=Math.sin(ang);inp.aim=ang;break;
+    }
+  }
+  return inp;
+}
+
+/* ====== التحكم ====== */
+addEventListener('keydown',e=>{keys[e.code]=true;if(running&&['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter'].includes(e.code))e.preventDefault()});
+addEventListener('keyup',e=>{keys[e.code]=false});
+const n=b=>b?1:0;
+function getInput(s,p){
+  const K=c=>!!keys[c]; let mx=0,my=0,fire=false;
+  if(s==='B'){mx=n(K('ArrowRight'))-n(K('ArrowLeft'));my=n(K('ArrowDown'))-n(K('ArrowUp'));fire=K('Enter')||K('ShiftRight')}
+  else if(s==='A'){mx=n(K('KeyD'))-n(K('KeyA'));my=n(K('KeyS'))-n(K('KeyW'));fire=K('KeyF')}
+  else{
+    mx=n(K('KeyD')||K('ArrowRight'))-n(K('KeyA')||K('ArrowLeft'));my=n(K('KeyS')||K('ArrowDown'))-n(K('KeyW')||K('ArrowUp'));fire=K('Space');
+    mx+=touchL.x;my+=touchL.y;
+  }
+  const l=Math.hypot(mx,my); if(l>1){mx/=l;my/=l}
+  if(l>.1)lastAim[s]=Math.atan2(my,mx);
+  let aim=lastAim[s]??0;
+  if(s==='main'){
+    const px=p.rx??p.x, py=p.ry??p.y;
+    if(touchR.on){aim=Math.atan2(touchR.y,touchR.x);if(Math.hypot(touchR.x,touchR.y)>.25)fire=true}
+    else if(mouse.active){aim=Math.atan2(mouse.y-py,mouse.x-px);fire=fire||mouse.down}
+    else if(l<=.1&&!fire)aim=lastAim[s]??0;
+  }
+  return{mx,my,aim,fire};
+}
+function fitCanvas(){const s=Math.min(innerWidth/W,innerHeight/H);cv.style.width=W*s+'px';cv.style.height=H*s+'px'}
+addEventListener('resize',fitCanvas);
+function toGame(e){const r=cv.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height}
+cv.addEventListener('mousemove',e=>{if(e.pointerType==='touch')return;mouse.active=true;toGame(e)});
+cv.addEventListener('mousedown',e=>{mouse.active=true;toGame(e);if(e.button===0)mouse.down=true});
+addEventListener('mouseup',()=>{mouse.down=false});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+function makeStick(zone,base,out,isAim){
+  let id=null,ox=0,oy=0; const knob=base.firstElementChild;
+  zone.addEventListener('pointerdown',e=>{if(id!==null)return;id=e.pointerId;zone.setPointerCapture(id);ox=e.clientX;oy=e.clientY;
+    base.style.display='block';base.style.left=(ox-55)+'px';base.style.top=(oy-55)+'px';knob.style.left='30px';knob.style.top='30px';if(isAim)out.on=true});
+  zone.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;let dx=e.clientX-ox,dy=e.clientY-oy;const l=Math.hypot(dx,dy),m=50;if(l>m){dx*=m/l;dy*=m/l}
+    out.x=dx/m;out.y=dy/m;knob.style.left=(30+dx)+'px';knob.style.top=(30+dy)+'px'});
+  const end=e=>{if(e.pointerId!==id)return;id=null;base.style.display='none';out.x=0;out.y=0;if(isAim)out.on=false};
+  zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
+}
+makeStick($('zl'),$('bl'),touchL,false);
+makeStick($('zr'),$('br'),touchR,true);
+
+/* ====== الرسم ====== */
+function draw(){
+  const now=performance.now();
+  ctx.drawImage(mazeCv,0,0);
+  for(const pk of state.pickups){
+    const pulse=1+Math.sin(now/200)*.12;
+    ctx.fillStyle=PCOL[pk.k];ctx.globalAlpha=.9;ctx.beginPath();ctx.arc(pk.x,pk.y,10*pulse,0,7);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle='#000';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(PLET[pk.k],pk.x,pk.y+1);
+  }
+  for(const b of state.bullets){ctx.fillStyle=state.players[b.o]?.color||'#fff';ctx.beginPath();ctx.arc(b.x,b.y,b.dmg>=50?4:3,0,7);ctx.fill()}
+  for(const p of state.players){
+    if(!p.alive)continue;
+    if(mode==='guest'){ if(p.rx==null||Math.hypot(p.rx-p.x,p.ry-p.y)>80){p.rx=p.x;p.ry=p.y} p.rx+=(p.x-p.rx)*.4;p.ry+=(p.y-p.ry)*.4 } else {p.rx=p.x;p.ry=p.y}
+    const x=p.rx,y=p.ry;
+    ctx.globalAlpha=p.inv>0&&Math.floor(now/100)%2?.4:1;
+    ctx.strokeStyle='#cfd8dc';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(p.aim)*19,y+Math.sin(p.aim)*19);ctx.stroke();
+    ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,R,0,7);ctx.fill();
+    if(isMine(p)){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#000a';ctx.fillRect(x-14,y-22,28,4);ctx.fillStyle=p.hp>40?'#4caf50':'#f44336';ctx.fillRect(x-14,y-22,28*Math.max(0,p.hp)/100,4);
+  }
+  // لوحة النتائج
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font='bold 14px sans-serif';
+  state.players.forEach((p,i)=>{
+    const y=T+10+i*20;ctx.fillStyle='#000a';ctx.fillRect(T+2,y-14,230,18);
+    ctx.fillStyle=p.color;ctx.fillRect(T+6,y-10,10,10);ctx.fillStyle='#fff';
+    ctx.fillText(p.name+(p.bot?' 🤖':'')+'  '+p.score+'/'+WIN+'  '+WP[p.w].name+(p.ammo>0?' ×'+p.ammo:''),T+22,y);
+  });
+  let fy=H-T-8;ctx.font='13px sans-serif';
+  for(const f of state.feed.slice().reverse()){ if(f.t&&now-f.t>5000)continue; ctx.fillStyle='#000a';ctx.fillRect(T+2,fy-13,ctx.measureText(f.s).width+12,17);ctx.fillStyle='#fff';ctx.fillText(f.s,T+8,fy);fy-=20 }
+}
+function isMine(p){return mode==='guest'||mode==='host'?p.id===mySlot:(p.local==='main'||(mode==='local'))}
+
+/* ====== الشبكة (WebRTC + إشارة عبر Firestore) ====== */
+const net={inputs:{},peers:{},max:2,code:'',fb:null,isHost:false,dc:null,started:false,unsubs:[]};
+const rtcCfg={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
+async function loadFB(){
+  if(net.fb)return net.fb;
+  const fs=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+  const app=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+  const a=app.getApps().length?app.getApp():app.initializeApp(firebaseConfig);
+  net.fb={fs,db:fs.getFirestore(a)};return net.fb;
+}
+const waitIce=pc=>new Promise(res=>{if(pc.iceGatheringState==='complete')return res();const t=setTimeout(res,5000);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);res()}})});
+const setStatus=s=>$('status').textContent=s||'';
+const myName=()=>($('nm').value.trim()||'لاعب')+'';
+function send(dc,o){try{if(dc&&dc.readyState==='open')dc.send(JSON.stringify(o))}catch(e){}}
+function broadcast(o){for(const k in net.peers)send(net.peers[k].dc,o)}
+function lobbyNames(){const L=[myName()+' (أنت)'];for(let s=1;s<net.max;s++){const p=net.peers[s];L.push(p?p.name:'🤖 حاسوب')}return L}
+function refreshLobby(){
+  $('plist').innerHTML=lobbyNames().map((s,i)=>`<div style="color:${COLORS[i]}">● ${s.replace(/</g,'&lt;')}</div>`).join('');
+  broadcast({t:'lobby',l:lobbyNames().map((s,i)=>i===0?s.replace(' (أنت)',''):s)});
+}
+async function createRoom(){
+  if(!ONLINE_READY)return setStatus('أضف إعدادات Firebase (apiKey) داخل الملف أولاً.');
+  try{
+    setStatus('جاري إنشاء الغرفة…');
+    const {fs,db}=await loadFB();
+    const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let code='';for(let i=0;i<5;i++)code+=A[Math.floor(Math.random()*A.length)];
+    await fs.setDoc(fs.doc(db,'rooms',code),{max:cfg.n,created:Date.now()});
+    net.code=code;net.max=cfg.n;net.isHost=true;net.peers={};net.inputs={};net.started=false;
+    $('roomCode').textContent=code;$('onChoice').classList.add('hidden');$('lobby').classList.remove('hidden');setStatus('');refreshLobby();
+    net.unsubs.push(fs.onSnapshot(fs.collection(db,'rooms',code,'peers'),snap=>snap.docChanges().forEach(ch=>{
+      const d=ch.doc.data(); if(ch.type==='added'&&d.offer&&!d.answer)hostAccept(ch.doc.ref,d.offer);
+    })));
+  }catch(e){setStatus('تعذر إنشاء الغرفة: '+(e.code||e.message)+' — تحقق من قواعد Firestore.')}
+}
+async function hostAccept(ref,offer){
+  const {fs}=net.fb;
+  let slot=0;for(let s=1;s<net.max;s++)if(!net.peers[s]){slot=s;break}
+  if(!slot||net.started){fs.updateDoc(ref,{full:true});return}
+  const pc=new RTCPeerConnection(rtcCfg), peer={pc,dc:null,name:'لاعب '+(slot+1)}; net.peers[slot]=peer;
+  pc.ondatachannel=e=>{
+    const dc=e.channel;peer.dc=dc;
+    dc.onopen=()=>{send(dc,{t:'hello',id:slot,max:net.max});refreshLobby()};
+    dc.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch(x){return}
+      if(m.t==='name'){peer.name=String(m.n||'لاعب').slice(0,12);refreshLobby()}
+      else if(m.t==='in')net.inputs[slot]={mx:+m.mx||0,my:+m.my||0,aim:+m.aim||0,fire:!!m.fire};
+    };
+    dc.onclose=()=>{
+      if(net.peers[slot]===peer){
+        if(state&&net.started&&mode==='host'){state.players[slot].bot=true;say(state.players[slot].name+' غادر — أخذ الحاسوب مكانه')}
+        delete net.peers[slot];if(!net.started)refreshLobby();
+      }
+    };
+  };
+  pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState)&&net.peers[slot]===peer&&!net.started){delete net.peers[slot];refreshLobby()}};
+  try{
+    await pc.setRemoteDescription(offer);const ans=await pc.createAnswer();await pc.setLocalDescription(ans);await waitIce(pc);
+    await fs.updateDoc(ref,{answer:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}});
+  }catch(e){delete net.peers[slot]}
+}
+async function joinRoom(){
+  if(!ONLINE_READY)return setStatus('أضف إعدادات Firebase (apiKey) داخل الملف أولاً.');
+  const code=$('codeIn').value.trim().toUpperCase(); if(code.length<4)return setStatus('أدخل رمز الغرفة.');
+  try{
+    setStatus('جاري الاتصال…');
+    const {fs,db}=await loadFB();
+    const room=await fs.getDoc(fs.doc(db,'rooms',code)); if(!room.exists())return setStatus('الغرفة غير موجودة.');
+    const pc=new RTCPeerConnection(rtcCfg), dc=pc.createDataChannel('g'); net.dc=dc;net.isHost=false;
+    dc.onopen=()=>{send(dc,{t:'name',n:myName()});setStatus('تم الاتصال ✔ — بانتظار المضيف ليبدأ اللعبة…')};
+    dc.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch(x){return}
+      if(m.t==='hello'){mySlot=m.id;net.max=m.max}
+      else if(m.t==='lobby'){$('onChoice').classList.add('hidden');setStatus('بانتظار المضيف…  اللاعبون: '+m.l.join(' · '))}
+      else if(m.t==='init'){startGuest(m)}
+      else if(m.t==='s'&&state&&mode==='guest')applySnap(m);
+    };
+    dc.onclose=()=>{if(mode==='guest'||running===false){ if(mode==='guest'){alert('انقطع الاتصال بالمضيف');toMenu()} else setStatus('انقطع الاتصال.')}};
+    const offer=await pc.createOffer();await pc.setLocalDescription(offer);await waitIce(pc);
+    const ref=fs.doc(fs.collection(db,'rooms',code,'peers'));
+    await fs.setDoc(ref,{offer:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}});
+    net.unsubs.push(fs.onSnapshot(ref,s=>{const d=s.data();if(!d)return;
+      if(d.full){setStatus('الغرفة ممتلئة أو بدأت اللعبة.');return}
+      if(d.answer&&!pc.remoteDescription)pc.setRemoteDescription(d.answer).catch(()=>setStatus('فشل الاتصال.'));
+    }));
+    setStatus('بانتظار رد المضيف…');
+  }catch(e){setStatus('تعذر الانضمام: '+(e.code||e.message))}
+}
+function hostStart(){
+  net.started=true;
+  const defs=[{name:myName(),local:'main'}];
+  for(let s=1;s<net.max;s++)defs.push(net.peers[s]?{name:net.peers[s].name}:{name:'CPU '+s,bot:true});
+  mode='host';mySlot=0;
+  const seed=Math.floor(Math.random()*1e9);newState(seed,defs);
+  broadcast({t:'init',seed,defs:defs.map(d=>({name:d.name,bot:!!d.bot}))});
+  enterGame();
+}
+function startGuest(m){
+  mode='guest';
+  newState(m.seed,m.defs.map((d,i)=>({name:d.name,bot:d.bot,local:i===mySlot?'main':null})));
+  enterGame();
+}
+const snapshot=()=>({t:'s',
+  p:state.players.map(p=>[Math.round(p.x),Math.round(p.y),+p.aim.toFixed(2),Math.round(p.hp),p.alive?1:0,WK.indexOf(p.w),p.ammo,p.score,+p.inv.toFixed(1)]),
+  b:state.bullets.map(b=>[Math.round(b.x),Math.round(b.y),b.o,b.dmg]),
+  k:state.pickups.map(k=>[k.x,k.y,WK.indexOf(k.k)]),
+  f:state.feed.filter(x=>performance.now()-x.t<5000).map(x=>x.s),o:state.over});
+function applySnap(m){
+  m.p.forEach((a,i)=>{const p=state.players[i];if(!p)return;p.x=a[0];p.y=a[1];p.aim=a[2];p.hp=a[3];p.alive=!!a[4];p.w=WK[a[5]];p.ammo=a[6];p.score=a[7];p.inv=a[8]});
+  if(m.b.length>state.bullets.length)sfx('shot');
+  state.bullets=m.b.map(a=>({x:a[0],y:a[1],o:a[2],dmg:a[3]}));
+  state.pickups=m.k.map(a=>({x:a[0],y:a[1],k:WK[a[2]]}));
+  state.feed=m.f.map(s=>({s}));
+  if(m.o&&!state.over){state.over=m.o;showOver()}
+  if(!m.o&&state.over){state.over=null;$('over').classList.add('hidden')}
+}
+
+/* ====== واجهة وحلقة اللعب ====== */
+let last=performance.now(),snapT=0,inT=0;
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(running&&state){
+    if(mode==='guest'){
+      inT+=dt;if(inT>=.033){inT=0;const p=state.players[mySlot];if(p){const i=getInput('main',p);send(net.dc,{t:'in',mx:+i.mx.toFixed(2),my:+i.my.toFixed(2),aim:+i.aim.toFixed(2),fire:i.fire})}}
+    }else{
+      simulate(dt);
+      if(mode==='host'){snapT+=dt;if(snapT>=.05){snapT=0;broadcast(snapshot())}}
+    }
+    draw();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+function enterGame(){
+  ['menu','online','over'].forEach(i=>$(i).classList.add('hidden'));
+  $('bMenu').classList.remove('hidden');if(isTouch)$('touch').classList.remove('hidden');
+  running=true;fitCanvas();beep(1,.01);
+}
+function showOver(){
+  const w=state.players[state.over.win];
+  $('overT').textContent='🏆 فاز '+w.name+'!';
+  $('over').classList.remove('hidden');
+  $('bAgain').classList.toggle('hidden',mode==='guest');
+}
+function toMenu(){
+  running=false;state=null;
+  net.unsubs.forEach(u=>{try{u()}catch(e){}});net.unsubs=[];
+  for(const k in net.peers){try{net.peers[k].pc.close()}catch(e){}}
+  try{net.dc&&net.dc.close()}catch(e){}
+  net.peers={};net.dc=null;net.started=false;net.inputs={};mode=null;
+  ['over','online','bMenu','touch'].forEach(i=>$(i).classList.add('hidden'));
+  $('menu').classList.remove('hidden');
+  $('onChoice').classList.remove('hidden');$('lobby').classList.add('hidden');setStatus('');
+}
+function startCpu(){
+  mode='cpu';const defs=[{name:myName(),local:'main'}];for(let i=1;i<cfg.n;i++)defs.push({name:'CPU '+i,bot:true});
+  newState(Math.floor(Math.random()*1e9),defs);enterGame();
+}
+function startLocal(){
+  mode='local';const defs=[{name:'لاعب 1',local:'A'},{name:'لاعب 2',local:'B'}];for(let i=2;i<cfg.n;i++)defs.push({name:'CPU '+(i-1),bot:true});
+  newState(Math.floor(Math.random()*1e9),defs);enterGame();
+}
+function again(){
+  if(mode==='host'){
+    const defs=state.players.map(p=>({name:p.name,bot:p.bot,local:p.local}));
+    const seed=Math.floor(Math.random()*1e9);newState(seed,defs);
+    broadcast({t:'init',seed,defs:defs.map(d=>({name:d.name,bot:!!d.bot}))});
+  }else if(mode==='cpu')startCpu();
+  else if(mode==='local')startLocal();
+  $('over').classList.add('hidden');
+}
+function seg(id,key){$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;[...$(id).children].forEach(x=>x.classList.toggle('on',x===b));cfg[key]=key==='n'?+b.dataset.v:b.dataset.v})}
+seg('segN','n');seg('segD','diff');
+$('nm').value=localStorage.getItem('gname')||'';$('nm').addEventListener('input',()=>localStorage.setItem('gname',$('nm').value));
+$('bCpu').onclick=startCpu;$('bLocal').onclick=startLocal;
+$('bOnline').onclick=()=>{$('menu').classList.add('hidden');$('online').classList.remove('hidden');if(!ONLINE_READY)setStatus('اللعب أونلاين يحتاج إعدادات Firebase داخل الملف (انظر أعلى الكود).')};
+$('bBack').onclick=toMenu;$('bCreate').onclick=createRoom;$('bJoin').onclick=joinRoom;$('bStart').onclick=hostStart;
+$('bMenu').onclick=()=>{if(confirm('العودة إلى القائمة؟'))toMenu()};
+$('bAgain').onclick=again;$('bToMenu').onclick=toMenu;
+fitCanvas();
+</script>
+</body>
+</html>
