@@ -165,6 +165,9 @@ footer p{margin:0 0 10px}
 #instBtn:focus-visible,#chatBtn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.sweep,.blip{animation:none}.blip{opacity:1}.meter i,summary::after{transition:none}}
+.seg{display:flex;gap:8px;background:var(--acc-soft);padding:5px;border-radius:999px;margin:0 0 16px}
+.seg button{flex:1;font:inherit;font-weight:600;font-size:15px;padding:10px;min-height:44px;border:0;border-radius:999px;background:transparent;color:var(--mute);cursor:pointer}
+.seg button.on{background:var(--acc);color:var(--on)}
 </style>
 </head>
 <body>
@@ -207,11 +210,15 @@ footer p{margin:0 0 10px}
 <section id="tool" class="card" aria-labelledby="h-tool">
 <h2 id="h-tool" data-i="th"></h2>
 <p data-i="tp"></p>
+<div class="seg" role="group" aria-label="Platform"><button type="button" id="pIG" class="on">Instagram</button><button type="button" id="pTT">TikTok</button></div>
 <div class="drop">
+<div id="igIn" style="display:contents">
 <label><span data-i="lz"></span> <input id="fz" type="file" accept=".zip"></label>
 <div class="or" data-i="or"></div>
 <label>followers_1.json <input id="f1" type="file" accept=".json" multiple></label>
 <label>following.json <input id="f2" type="file" accept=".json"></label>
+</div>
+<div id="ttIn" style="display:none"><label><span data-i="ttl"></span> <input id="ft" type="file" accept=".json,.zip"></label><p class="tip" data-i="tth"></p></div>
 <button id="go" disabled data-i="go"></button>
 </div>
 <div id="err" role="alert"></div>
@@ -258,7 +265,7 @@ footer p{margin:0 0 10px}
 <script>
 const $=id=>document.getElementById(id);
 const T={
-ar:{vh:"فيديو الشرح",ab:"من نحن",ct:"اتصل بنا",g1:"تحميل بياناتك",g2:"طريقة الاستعمال",g3:"نصائح الأمان",md:"اعرف من تتابعه ولا يتابعك بملفين من بيانات إنستغرام، بدون كلمة سر.",sv:"شخص محتار يحك رأسه بيديه",hp:"محتار من لا يتابعك؟ ارفع ملفين من بيانات إنستغرام وسنكشفهم لك في ثوان، بدون كلمة سر.",cta:"ابدأ الآن",hh:"كيف يعمل في 4 خطوات",
+ar:{ttl:"ملف TikTok (JSON أو zip)",tth:"فـ TikTok: الملف الشخصي ← ☰ ← الإعدادات والخصوصية ← الحساب ← تنزيل بياناتك، واختر صيغة JSON. ثم ارفع الملف أو zip كما هو.",eT:"لم أجد قوائم المتابعين والمتابَعين فملف TikTok. تأكد أنك اخترت صيغة JSON.",vh:"فيديو الشرح",ab:"من نحن",ct:"اتصل بنا",g1:"تحميل بياناتك",g2:"طريقة الاستعمال",g3:"نصائح الأمان",md:"اعرف من تتابعه ولا يتابعك بملفين من بيانات إنستغرام، بدون كلمة سر.",sv:"شخص محتار يحك رأسه بيديه",hp:"محتار من لا يتابعك؟ ارفع ملفين من بيانات إنستغرام وسنكشفهم لك في ثوان، بدون كلمة سر.",cta:"ابدأ الآن",hh:"كيف يعمل في 4 خطوات",
 s1t:"اطلب بياناتك من إنستغرام",s1d:"الإعدادات، ثم مركز الحسابات، ثم تنزيل معلوماتك. اختر المتابعين والمتابَعين فقط، وصيغة JSON.",
 s2t:"نزّل ملف zip",s2d:"سيصلك إشعار أو بريد عندما يصبح جاهزا، ثم نزّل الملف إلى هاتفك.",
 s3t:"ارفعه هنا",s3d:"اختر ملف zip كما هو، أو الملفين followers_1.json وfollowing.json بعد الاستخراج.",
@@ -269,9 +276,9 @@ tip:"ضع علامة ✓ على من انتهيت منه. تجنب إلغاء ع
 ds:"شرح مفصل لتنزيل البيانات من إنستغرام",
 d1:"افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.",d2:"اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.",d3:"اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.",d4:"اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.",d5:"اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.",d6:"انتظر الإشعار أو البريد، ونزّل ملف zip.",
 dt:"أسماء الأزرار قد تختلف قليلا حسب اللغة والنسخة. المهم: المتابعون والمتابَعون فقط، وبصيغة JSON.",
-pv:"سياسة الخصوصية",shT:"شارك الأداة مع أصدقائك",shB:"📤 شارك",cpB:"🔗 نسخ الرابط",cpd:"تم نسخ الرابط ✅",shX:"اعرف من لا يتابعك فإنستغرام بدون كلمة سر",dc:"Unfollow Radar غير تابع لإنستغرام أو Meta.",
+pv:"سياسة الخصوصية",shT:"شارك الأداة مع أصدقائك",shB:"📤 شارك",cpB:"🔗 نسخ الرابط",cpd:"تم نسخ الرابط ✅",shX:"اعرف من لا يتابعك فإنستغرام بدون كلمة سر",dc:"Unfollow Radar غير تابع لإنستغرام أو TikTok أو Meta.",
 eJ:"ملف غير صالح: {a}",eR:"تعذر قراءة {a}",eZ:"تعذر تحميل مكتبة zip. تأكد من الإنترنت أو استخرج الملفين واخترهما.",eF:"لم أجد ملفات followers وfollowing داخل الـ zip. تأكد أنك اخترت JSON وأن البيانات تشمل المتابعين والمتابَعين.",eN:"لم أجد أي حسابات. تأكد أنك اخترت الملفين الصحيحين.",eG:"حدث خطأ. حاول مرة أخرى.",nr:"لا توجد نتائج.",dn:"تم: ",op:"فتح",ot:"🌐 لغات أخرى (يتطلب إنترنت)",eO:"لغات أخرى تتطلب اتصالا بالإنترنت."},
-fr:{vh:"Vidéo explicative",ab:"À propos",ct:"Contact",g1:"Télécharger vos données",g2:"Mode d'emploi",g3:"Conseils de sécurité",md:"Découvrez qui vous suivez sans réciprocité grâce à deux fichiers de données Instagram, sans mot de passe.",sv:"Personne perplexe qui se gratte la tête",hp:"Vous vous demandez qui ne vous suit pas en retour ? Importez deux fichiers de vos données Instagram et on les trouve en quelques secondes, sans mot de passe.",cta:"Commencer",hh:"Comment ça marche en 4 étapes",
+fr:{ttl:"Fichier TikTok (JSON ou zip)",tth:"Sur TikTok : Profil ← ☰ ← Paramètres et confidentialité ← Compte ← Télécharger vos données, format JSON. Importez ensuite le fichier ou le zip tel quel.",eT:"Listes d’abonnés/abonnements introuvables dans le fichier TikTok. Vérifiez que vous avez choisi le format JSON.",vh:"Vidéo explicative",ab:"À propos",ct:"Contact",g1:"Télécharger vos données",g2:"Mode d'emploi",g3:"Conseils de sécurité",md:"Découvrez qui vous suivez sans réciprocité grâce à deux fichiers de données Instagram, sans mot de passe.",sv:"Personne perplexe qui se gratte la tête",hp:"Vous vous demandez qui ne vous suit pas en retour ? Importez deux fichiers de vos données Instagram et on les trouve en quelques secondes, sans mot de passe.",cta:"Commencer",hh:"Comment ça marche en 4 étapes",
 s1t:"Demandez vos données à Instagram",s1d:"Paramètres, puis Centre de comptes, puis Télécharger vos informations. Choisissez uniquement Followers et Abonnements, au format JSON.",
 s2t:"Téléchargez le fichier zip",s2d:"Vous recevrez une notification ou un e-mail quand il sera prêt, puis téléchargez-le sur votre téléphone.",
 s3t:"Importez-le ici",s3d:"Choisissez le zip tel quel, ou les deux fichiers followers_1.json et following.json après extraction.",
@@ -282,9 +289,9 @@ tip:"Cochez ✓ ceux que vous avez traités. Évitez d'en retirer beaucoup d'un 
 ds:"Guide détaillé pour télécharger les données Instagram",
 d1:"Ouvrez Instagram, touchez votre photo de profil puis ☰.",d2:"Choisissez <b>Paramètres et confidentialité</b> puis <b>Centre de comptes</b>.",d3:"Touchez <b>Vos informations et autorisations</b> puis <b>Télécharger vos informations</b>.",d4:"Choisissez votre compte puis <b>Une partie de vos informations</b>, et cochez uniquement <b>Followers et abonnements</b>.",d5:"Choisissez <b>Exporter vers l'appareil</b>, le format <b>JSON</b>, la période <b>Depuis toujours</b>, puis <b>Lancer l'exportation</b>.",d6:"Attendez la notification ou l'e-mail, puis téléchargez le zip.",
 dt:"Les noms des boutons peuvent varier selon la langue et la version. L'essentiel : uniquement followers et abonnements, au format JSON.",
-pv:"Politique de confidentialité",shT:"Partagez l'outil avec vos amis",shB:"📤 Partager",cpB:"🔗 Copier le lien",cpd:"Lien copié ✅",shX:"Découvrez qui ne vous suit pas sur Instagram, sans mot de passe",dc:"Unfollow Radar n'est affilié ni à Instagram ni à Meta.",
+pv:"Politique de confidentialité",shT:"Partagez l'outil avec vos amis",shB:"📤 Partager",cpB:"🔗 Copier le lien",cpd:"Lien copié ✅",shX:"Découvrez qui ne vous suit pas sur Instagram, sans mot de passe",dc:"Unfollow Radar n'est affilié ni à Instagram, ni à TikTok, ni à Meta.",
 eJ:"Fichier invalide : {a}",eR:"Impossible de lire {a}",eZ:"Impossible de charger la bibliothèque zip. Vérifiez votre connexion ou extrayez les deux fichiers et choisissez-les.",eF:"Aucun fichier followers ou following dans le zip. Vérifiez que vous avez choisi JSON et que les données incluent followers et abonnements.",eN:"Aucun compte trouvé. Vérifiez que vous avez choisi les bons fichiers.",eG:"Une erreur est survenue. Réessayez.",nr:"Aucun résultat.",dn:"Fait : ",op:"Ouvrir",ot:"🌐 Autres langues (Internet requis)",eO:"Les autres langues nécessitent une connexion Internet."},
-en:{vh:"Tutorial video",ab:"About",ct:"Contact us",g1:"Download your data",g2:"How to use",g3:"Safety tips",md:"Find who you follow that doesn't follow you back, using two Instagram data files, no password needed.",sv:"A puzzled person scratching their head",hp:"Wondering who doesn't follow you back? Upload two files from your Instagram data and we'll find them in seconds, no password needed.",cta:"Get started",hh:"How it works in 4 steps",
+en:{ttl:"TikTok file (JSON or zip)",tth:"On TikTok: Profile ← ☰ ← Settings and privacy ← Account ← Download your data, format JSON. Then upload the file or the zip as is.",eT:"No followers/following lists found in the TikTok file. Make sure you chose JSON format.",vh:"Tutorial video",ab:"About",ct:"Contact us",g1:"Download your data",g2:"How to use",g3:"Safety tips",md:"Find who you follow that doesn't follow you back, using two Instagram data files, no password needed.",sv:"A puzzled person scratching their head",hp:"Wondering who doesn't follow you back? Upload two files from your Instagram data and we'll find them in seconds, no password needed.",cta:"Get started",hh:"How it works in 4 steps",
 s1t:"Request your data from Instagram",s1d:"Settings, then Accounts Center, then Download your information. Choose followers and following only, in JSON format.",
 s2t:"Download the zip file",s2d:"You'll get a notification or email when it's ready, then download it to your phone.",
 s3t:"Upload it here",s3d:"Pick the zip as is, or the two files followers_1.json and following.json after extracting.",
@@ -295,7 +302,7 @@ tip:"Tick ✓ the ones you're done with. Avoid unfollowing many accounts in a sh
 ds:"Detailed guide to download your Instagram data",
 d1:"Open Instagram, tap your profile picture then ☰.",d2:"Choose <b>Settings and privacy</b> then <b>Accounts Center</b>.",d3:"Tap <b>Your information and permissions</b> then <b>Download your information</b>.",d4:"Choose your account then <b>Some of your information</b>, and tick only <b>Followers and following</b>.",d5:"Choose <b>Export to device</b>, format <b>JSON</b>, date range <b>All time</b>, then <b>Start export</b>.",d6:"Wait for the notification or email, then download the zip.",
 dt:"Button names may vary slightly by language and version. What matters: followers and following only, in JSON format.",
-pv:"Privacy policy",shT:"Share the tool with your friends",shB:"📤 Share",cpB:"🔗 Copy link",cpd:"Link copied ✅",shX:"Find who does not follow you back on Instagram, no password needed",dc:"Unfollow Radar is not affiliated with Instagram or Meta.",
+pv:"Privacy policy",shT:"Share the tool with your friends",shB:"📤 Share",cpB:"🔗 Copy link",cpd:"Link copied ✅",shX:"Find who does not follow you back on Instagram, no password needed",dc:"Unfollow Radar is not affiliated with Instagram, TikTok or Meta.",
 eJ:"Invalid file: {a}",eR:"Could not read {a}",eZ:"Could not load the zip library. Check your connection or extract the two files and pick them.",eF:"No followers or following files found in the zip. Make sure you chose JSON and that the data includes followers and following.",eN:"No accounts found. Make sure you picked the right files.",eG:"Something went wrong. Please try again.",nr:"No results.",dn:"Done: ",op:"Open",ot:"🌐 Other languages (needs internet)",eO:"Other languages need an internet connection."}
 };
 const lsg=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
@@ -303,10 +310,13 @@ let L=lsg('lang');if(!T[L])L=(navigator.language||'ar').slice(0,2);if(!T[L])L='a
 const t=k=>T[L][k]||T.en[k]||k;
 class E extends Error{constructor(k,a){super(k);this.k=k;this.a=a}}
 let non=[],done=new Set(),lastErr=null,lostArr=[],wl=new Set();
-try{wl=new Set(JSON.parse(lsg('wl')||'[]'))}catch(e){}
-const saveW=()=>lss('wl',JSON.stringify([...wl]));
-try{done=new Set(JSON.parse(lsg('done')||'[]'))}catch(e){}
-const save=()=>lss('done',JSON.stringify([...done]));
+let P=lsg('plat')==='tt'?'tt':'ig';
+const pk=k=>k+(P==='tt'?'_tt':'');
+const loadSets=()=>{wl=new Set();done=new Set();try{wl=new Set(JSON.parse(lsg(pk('wl'))||'[]'))}catch(e){}try{done=new Set(JSON.parse(lsg(pk('done'))||'[]'))}catch(e){}};
+loadSets();
+const saveW=()=>lss(pk('wl'),JSON.stringify([...wl]));
+const save=()=>lss(pk('done'),JSON.stringify([...done]));
+const prof=n=>P==='tt'?'https://www.tiktok.com/@'+encodeURIComponent(n):'https://www.instagram.com/'+encodeURIComponent(n)+'/';
 const msg=e=>e&&e.k?t(e.k).replace('{a}',e.a||''):t('eG');
 function apply(){
   const d=document.documentElement;d.lang=L;d.dir=L==='ar'?'rtl':'ltr';
@@ -342,9 +352,34 @@ function names(data){
   }
   return out;
 }
-const upd=()=>{$('go').disabled=!($('fz').files.length||($('f1').files.length&&$('f2').files.length))};
+function ttWalk(o,path,fl,fg){
+  if(Array.isArray(o)){
+    const p=path.toLowerCase(),isG=p.includes('following'),isF=!isG&&(p.includes('follower')||p.includes('fans'));
+    if(isG||isF){for(const e of o){const u=e&&typeof e==='object'?(e.UserName||e.Username||e.userName||e.username||''):'';if(typeof u==='string'&&u.trim())(isG?fg:fl).add(u.trim().toLowerCase())}}
+    else o.forEach(x=>ttWalk(x,path,fl,fg));
+  }else if(o&&typeof o==='object'){for(const k in o)ttWalk(o[k],path+'/'+k,fl,fg)}
+}
+const upd=()=>{$('go').disabled=P==='tt'?!$('ft').files.length:!($('fz').files.length||($('f1').files.length&&$('f2').files.length))};
+function setP(p,init){
+  P=p;lss('plat',p);
+  $('pIG').classList.toggle('on',p==='ig');$('pTT').classList.toggle('on',p==='tt');
+  $('igIn').style.display=p==='ig'?'contents':'none';$('ttIn').style.display=p==='tt'?'block':'none';
+  if(!init){loadSets();non=[];lostArr=[];lastErr=null;$('err').textContent='';$('res').hidden=true;$('lost').hidden=true}
+  upd();
+}
+$('pIG').onclick=()=>setP('ig');$('pTT').onclick=()=>setP('tt');$('ft').onchange=upd;
 $('f1').onchange=upd;$('f2').onchange=upd;$('fz').onchange=upd;
 async function load(){
+  if(P==='tt'){
+    const f=$('ft').files[0],fl=new Set(),fg=new Set(),feed=d=>ttWalk(d,'',fl,fg);
+    if(/\.zip$/i.test(f.name)){
+      if(typeof JSZip==='undefined')throw new E('eZ');
+      const z=await JSZip.loadAsync(f);
+      for(const n of Object.keys(z.files)){if(/\.json$/i.test(n)&&!z.files[n].dir){try{feed(JSON.parse(await z.files[n].async('string')))}catch(e){}}}
+    }else feed(await read(f));
+    if(!fl.size&&!fg.size)throw new E('eT');
+    return {fl,fg:[...fg]};
+  }
   const fl=new Set();let fg=[];
   if($('fz').files.length){
     if(typeof JSZip==='undefined')throw new E('eZ');
@@ -372,9 +407,9 @@ $('go').onclick=async()=>{
     $('cFollowing').textContent=fgs.size;
     $('cFollowers').textContent=fl.size;
     $('cFans').textContent=[...fl].filter(n=>!fgs.has(n)).length;
-    let pv=null;try{pv=JSON.parse(lsg('prev')||'null')}catch(e){}
+    let pv=null;try{pv=JSON.parse(lsg(pk('prev'))||'null')}catch(e){}
     lostArr=(pv&&pv.f)?pv.f.filter(n=>!fl.has(n)):[];
-    lss('prev',JSON.stringify({f:[...fl]}));
+    lss(pk('prev'),JSON.stringify({f:[...fl]}));
     renderLost();
     $('res').hidden=false;
     render();
@@ -404,14 +439,14 @@ function render(){
     const s=document.createElement('span');s.className='n';s.textContent=n;const av=document.createElement('span');av.className='av';av.setAttribute('aria-hidden','true');av.textContent=(n.match(/[a-z0-9]/i)||['?'])[0].toUpperCase();let hh=0;for(const ch of n)hh=(hh*31+ch.charCodeAt(0))%360;av.style.setProperty('--h',hh);
     const w=document.createElement('button');w.type='button';w.className='star';w.textContent=wl.has(n)?'★':'☆';w.title=t('pt');w.setAttribute('aria-label',t('pt')+': '+n);
     w.onclick=()=>{wl.has(n)?wl.delete(n):wl.add(n);saveW();render()};
-    const a=document.createElement('a');a.href='https://www.instagram.com/'+encodeURIComponent(n)+'/';a.target='_blank';a.rel='noopener';a.textContent=t('op');
+    const a=document.createElement('a');a.href=prof(n);a.target='_blank';a.rel='noopener';a.textContent=t('op');
     r.append(c,av,s,w,a);box.append(r);
   }
 }
 $('q').oninput=render;
 $('shw').onchange=render;
 $('ex').onclick=()=>{
-  const rows=['username,profile,status'].concat(non.filter(n=>!wl.has(n)).map(n=>n+',https://www.instagram.com/'+n+'/,'+(done.has(n)?'done':'todo')));
+  const rows=['username,profile,status'].concat(non.filter(n=>!wl.has(n)).map(n=>n+','+prof(n)+','+(done.has(n)?'done':'todo')));
   const b=new Blob(['\ufeff'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='unfollow-radar.csv';document.body.append(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1500);
@@ -422,6 +457,7 @@ const VIDEO='';
 if(/\.(mp4|webm)$/i.test(VIDEO)){e=document.createElement('video');e.src=VIDEO;e.controls=true;e.playsInline=true;e.preload='metadata'}
 else{e=document.createElement('iframe');e.src='https://www.youtube-nocookie.com/embed/'+VIDEO;e.allowFullscreen=true;e.title='Video'}
 e.style.cssText='width:100%;aspect-ratio:16/9;border:0;display:block';$('vbox').append(e);$('vid').hidden=false})();
+setP(P,true);
 const GT=lsg('gt')==='1';
 $('lang').value=GT?'other':L;
 apply();
