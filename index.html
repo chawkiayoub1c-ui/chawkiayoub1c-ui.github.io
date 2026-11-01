@@ -230,7 +230,7 @@ footer p{margin:0 0 10px}
 <div><b id="cFans">0</b><small data-i="c4"></small></div>
 </div>
 <div id="lost" class="card lost" hidden></div>
-<div class="tools"><label class="chk"><input id="shw" type="checkbox"><span data-i="sh"></span></label><span id="pg" class="pg"></span><button id="ex" type="button" data-i="ex"></button></div>
+<div class="tools"><label class="chk"><input id="shw" type="checkbox"><span data-i="sh"></span></label><label class="chk"><input id="shd" type="checkbox"><span data-i="sd"></span></label><span id="pg" class="pg"></span><button id="ex" type="button" data-i="ex"></button></div>
 <div class="meter" aria-hidden="true"><i id="meter"></i></div>
 <input id="q" type="search" data-ph="sp" data-al="sa">
 <div id="list" translate="no"></div>
@@ -271,7 +271,7 @@ s2t:"نزّل ملف zip",s2d:"سيصلك إشعار أو بريد عندما ي
 s3t:"ارفعه هنا",s3d:"اختر ملف zip كما هو، أو الملفين followers_1.json وfollowing.json بعد الاستخراج.",
 s4t:"شاهد النتيجة",s4d:"تظهر قائمة من تتابعه ولا يتابعك. اضغط «فتح» ثم ألغِ المتابعة يدويا.",
 th:"ابدأ المقارنة",tp:"الملفات تُقرأ داخل هاتفك فقط ولا تُرفع إلى أي مكان.",lz:"ملف zip الكامل",or:"أو اختر الملفين بعد الاستخراج",go:"قارن",
-c1:"تتابعهم",c2:"يتابعونك",c3:"لا يتابعونك",c4:"لا تتابعهم",pt:"استثناء (لن يظهر في القائمة)",sh:"عرض المستثنين",pg:"تم {a} من {b}",ex:"تصدير CSV",lo:"توقفوا عن متابعتك منذ آخر مقارنة",sp:"ابحث عن حساب",sa:"بحث",
+c1:"تتابعهم",c2:"يتابعونك",c3:"لا يتابعونك",c4:"لا تتابعهم",pt:"استثناء (لن يظهر في القائمة)",sh:"عرض المستثنين",sd:"عرض من تم إلغاء متابعتهم",pg:"تم {a} من {b}",ex:"تصدير CSV",lo:"توقفوا عن متابعتك منذ آخر مقارنة",sp:"ابحث عن حساب",sa:"بحث",
 tip:"ضع علامة ✓ على من انتهيت منه. تجنب إلغاء عدد كبير في وقت قصير حتى لا يحد إنستغرام من حسابك.",
 ds:"شرح مفصل لتنزيل البيانات من إنستغرام",
 d1:"افتح إنستغرام، واضغط على صورة ملفك الشخصي ثم ☰.",d2:"اختر <b>الإعدادات والخصوصية</b> ثم <b>مركز الحسابات</b>.",d3:"اضغط <b>معلوماتك وأذوناتك</b> ثم <b>تنزيل معلوماتك</b>.",d4:"اختر حسابك ثم <b>بعض معلوماتك</b>، وعلّم على <b>المتابعون والمتابَعون</b> فقط.",d5:"اختر <b>التصدير إلى الجهاز</b>، والصيغة <b>JSON</b>، والفترة <b>كل الوقت</b>، ثم <b>بدء التصدير</b>.",d6:"انتظر الإشعار أو البريد، ونزّل ملف zip.",
@@ -284,7 +284,7 @@ s2t:"Téléchargez le fichier zip",s2d:"Vous recevrez une notification ou un e-m
 s3t:"Importez-le ici",s3d:"Choisissez le zip tel quel, ou les deux fichiers followers_1.json et following.json après extraction.",
 s4t:"Voyez le résultat",s4d:"La liste de ceux que vous suivez sans réciprocité s'affiche. Appuyez sur « Ouvrir » puis désabonnez-vous manuellement.",
 th:"Lancer la comparaison",tp:"Les fichiers sont lus uniquement dans votre téléphone et ne sont envoyés nulle part.",lz:"Fichier zip complet",or:"ou choisissez les deux fichiers après extraction",go:"Comparer",
-c1:"Abonnements",c2:"Abonnés",c3:"Ne vous suivent pas",c4:"Vous ne les suivez pas",pt:"Exclure (ne plus afficher)",sh:"Afficher les exclus",pg:"Fait : {a} sur {b}",ex:"Exporter en CSV",lo:"Ont arrêté de vous suivre depuis la dernière comparaison",sp:"Rechercher un compte",sa:"Recherche",
+c1:"Abonnements",c2:"Abonnés",c3:"Ne vous suivent pas",c4:"Vous ne les suivez pas",pt:"Exclure (ne plus afficher)",sh:"Afficher les exclus",sd:"Afficher les traités",pg:"Fait : {a} sur {b}",ex:"Exporter en CSV",lo:"Ont arrêté de vous suivre depuis la dernière comparaison",sp:"Rechercher un compte",sa:"Recherche",
 tip:"Cochez ✓ ceux que vous avez traités. Évitez d'en retirer beaucoup d'un coup pour qu'Instagram ne limite pas votre compte.",
 ds:"Guide détaillé pour télécharger les données Instagram",
 d1:"Ouvrez Instagram, touchez votre photo de profil puis ☰.",d2:"Choisissez <b>Paramètres et confidentialité</b> puis <b>Centre de comptes</b>.",d3:"Touchez <b>Vos informations et autorisations</b> puis <b>Télécharger vos informations</b>.",d4:"Choisissez votre compte puis <b>Une partie de vos informations</b>, et cochez uniquement <b>Followers et abonnements</b>.",d5:"Choisissez <b>Exporter vers l'appareil</b>, le format <b>JSON</b>, la période <b>Depuis toujours</b>, puis <b>Lancer l'exportation</b>.",d6:"Attendez la notification ou l'e-mail, puis téléchargez le zip.",
@@ -297,7 +297,7 @@ s2t:"Download the zip file",s2d:"You'll get a notification or email when it's re
 s3t:"Upload it here",s3d:"Pick the zip as is, or the two files followers_1.json and following.json after extracting.",
 s4t:"See the result",s4d:"A list of people you follow who don't follow you back appears. Tap \"Open\" then unfollow manually.",
 th:"Start the comparison",tp:"Files are read inside your phone only and are never uploaded anywhere.",lz:"Full zip file",or:"or pick the two files after extracting",go:"Compare",
-c1:"Following",c2:"Followers",c3:"Don't follow back",c4:"You don't follow back",pt:"Protect (hide from list)",sh:"Show protected",pg:"Done: {a} of {b}",ex:"Export CSV",lo:"Stopped following you since last comparison",sp:"Search for an account",sa:"Search",
+c1:"Following",c2:"Followers",c3:"Don't follow back",c4:"You don't follow back",pt:"Protect (hide from list)",sh:"Show protected",sd:"Show done",pg:"Done: {a} of {b}",ex:"Export CSV",lo:"Stopped following you since last comparison",sp:"Search for an account",sa:"Search",
 tip:"Tick ✓ the ones you're done with. Avoid unfollowing many accounts in a short time so Instagram doesn't limit your account.",
 ds:"Detailed guide to download your Instagram data",
 d1:"Open Instagram, tap your profile picture then ☰.",d2:"Choose <b>Settings and privacy</b> then <b>Accounts Center</b>.",d3:"Tap <b>Your information and permissions</b> then <b>Download your information</b>.",d4:"Choose your account then <b>Some of your information</b>, and tick only <b>Followers and following</b>.",d5:"Choose <b>Export to device</b>, format <b>JSON</b>, date range <b>All time</b>, then <b>Start export</b>.",d6:"Wait for the notification or email, then download the zip.",
@@ -430,22 +430,25 @@ function renderLost(){
 function render(){
   const q=$('q').value.trim().toLowerCase();
   const box=$('list');box.innerHTML='';
-  const items=non.filter(n=>n.includes(q)&&($('shw').checked||!wl.has(n)));
+  const items=non.filter(n=>n.includes(q)&&($('shw').checked||!wl.has(n))&&($('shd').checked||!done.has(n)));
   prog();
   if(!items.length){box.innerHTML='<div class="empty">'+t('nr')+'</div>';return}
   for(const n of items){
     const r=document.createElement('div');r.className='row'+(done.has(n)?' done':'')+(wl.has(n)?' wl':'');
     const c=document.createElement('input');c.type='checkbox';c.checked=done.has(n);c.setAttribute('aria-label',t('dn')+n);
-    c.onchange=()=>{c.checked?done.add(n):done.delete(n);save();r.classList.toggle('done',c.checked);prog()};
+    c.onchange=()=>{c.checked?done.add(n):done.delete(n);save();r.classList.toggle('done',c.checked);prog();setTimeout(render,250)};
     const s=document.createElement('span');s.className='n';s.textContent=n;const av=document.createElement('span');av.className='av';av.setAttribute('aria-hidden','true');av.textContent=(n.match(/[a-z0-9]/i)||['?'])[0].toUpperCase();let hh=0;for(const ch of n)hh=(hh*31+ch.charCodeAt(0))%360;av.style.setProperty('--h',hh);
     const w=document.createElement('button');w.type='button';w.className='star';w.textContent=wl.has(n)?'★':'☆';w.title=t('pt');w.setAttribute('aria-label',t('pt')+': '+n);
     w.onclick=()=>{wl.has(n)?wl.delete(n):wl.add(n);saveW();render()};
     const a=document.createElement('a');a.href=prof(n);a.target='_blank';a.rel='noopener';a.textContent=t('op');
+    a.addEventListener('click',()=>{done.add(n);save();r.classList.add('done');c.checked=true;prog();setTimeout(render,400)});
     r.append(c,av,s,w,a);box.append(r);
   }
 }
 $('q').oninput=render;
 $('shw').onchange=render;
+$('shd').onchange=render;
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&non.length)render()});
 $('ex').onclick=()=>{
   const rows=['username,profile,status'].concat(non.filter(n=>!wl.has(n)).map(n=>n+','+prof(n)+','+(done.has(n)?'done':'todo')));
   const b=new Blob(['\ufeff'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
