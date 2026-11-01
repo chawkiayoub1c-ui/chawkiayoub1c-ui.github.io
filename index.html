@@ -213,12 +213,12 @@ footer p{margin:0 0 10px}
 <div class="seg" role="group" aria-label="Platform"><button type="button" id="pIG" class="on">Instagram</button><button type="button" id="pTT">TikTok</button></div>
 <div class="drop">
 <div id="igIn" style="display:contents">
-<label><span data-i="lz"></span> <input id="fz" type="file" accept=".zip"></label>
+<label><span data-i="lz"></span> <input id="fz" type="file"></label>
 <div class="or" data-i="or"></div>
-<label>followers_1.json <input id="f1" type="file" accept=".json" multiple></label>
-<label>following.json <input id="f2" type="file" accept=".json"></label>
+<label>followers_1.json <input id="f1" type="file" multiple></label>
+<label>following.json <input id="f2" type="file"></label>
 </div>
-<div id="ttIn" style="display:none"><label><span data-i="ttl"></span> <input id="ft" type="file" accept=".json,.zip"></label><p class="tip" data-i="tth"></p></div>
+<div id="ttIn" style="display:none"><label><span data-i="ttl"></span> <input id="ft" type="file"></label><p class="tip" data-i="tth"></p></div>
 <button id="go" disabled data-i="go"></button>
 </div>
 <div id="err" role="alert"></div>
@@ -341,7 +341,8 @@ $('lang').onchange=e=>{
   if(had){document.cookie='googtrans=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';location.reload();return}
   $('gt').textContent='';apply();
 };
-const read=f=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>{try{ok(JSON.parse(r.result))}catch(e){ko(new E('eJ',f.name))}};r.onerror=()=>ko(new E('eR',f.name));r.readAsText(f)});
+const read=f=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>{try{ok(JSON.parse(String(r.result).replace(/^\uFEFF/,'')))}catch(e){ko(new E('eJ',f.name))}};r.onerror=()=>ko(new E('eR',f.name));r.readAsText(f)});
+const isZip=async f=>{try{const b=new Uint8Array(await f.slice(0,2).arrayBuffer());return b[0]===0x50&&b[1]===0x4B}catch(e){return false}};
 function names(data){
   let arr=Array.isArray(data)?data:(data.relationships_following||data.relationships_followers||[]);
   const out=[];
@@ -372,7 +373,7 @@ $('f1').onchange=upd;$('f2').onchange=upd;$('fz').onchange=upd;
 async function load(){
   if(P==='tt'){
     const f=$('ft').files[0],fl=new Set(),fg=new Set(),feed=d=>ttWalk(d,'',fl,fg);
-    if(/\.zip$/i.test(f.name)){
+    if(await isZip(f)){
       if(typeof JSZip==='undefined')throw new E('eZ');
       const z=await JSZip.loadAsync(f);
       for(const n of Object.keys(z.files)){if(/\.json$/i.test(n)&&!z.files[n].dir){try{feed(JSON.parse(await z.files[n].async('string')))}catch(e){}}}
@@ -387,8 +388,8 @@ async function load(){
     let found=false;
     for(const n of Object.keys(z.files)){
       const base=n.split('/').pop();
-      if(/^followers_\d+\.json$/.test(base)){names(JSON.parse(await z.files[n].async('string'))).forEach(x=>fl.add(x));found=true}
-      else if(base==='following.json'){fg=names(JSON.parse(await z.files[n].async('string')));found=true}
+      if(/^followers_\d+(\s*\(\d+\))?\.json$/i.test(base)){names(JSON.parse(await z.files[n].async('string'))).forEach(x=>fl.add(x));found=true}
+      else if(/^following(\s*\(\d+\))?\.json$/i.test(base)){fg=names(JSON.parse(await z.files[n].async('string')));found=true}
     }
     if(!found)throw new E('eF');
   }else{
