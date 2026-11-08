@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>البيت المسكون 3D</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#05030a;color:#efe4cf;font-family:system-ui,Tahoma,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas#c{position:fixed;inset:0;width:100%;height:100%}
+#hud{position:fixed;inset:0;pointer-events:none;font-weight:700;text-shadow:0 1px 3px #000}
+#top{position:absolute;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;font-size:15px}
+#hp{position:absolute;top:36px;left:10px;width:42%;height:10px;background:#0008;border-radius:6px;overflow:hidden}
+#hpb{height:100%;width:100%;background:linear-gradient(90deg,#e53935,#66bb6a)}
+#mm{position:absolute;top:52px;left:10px;width:84px;height:84px;border-radius:8px;opacity:.85}
+#cmb{position:absolute;top:28%;width:100%;text-align:center;font-size:26px;color:#ffb454}
+#msg{position:absolute;top:40%;width:100%;text-align:center;font-size:30px;color:#fff}
+#dmg{position:absolute;inset:0;background:radial-gradient(transparent 40%,#f00);opacity:0;transition:opacity .25s}
+#cross{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border:2px solid #fff8;border-radius:50%}
+.btn{position:fixed;border-radius:50%;border:2px solid #fff6;color:#fff;display:flex;align-items:center;justify-content:center;pointer-events:auto;font-size:15px;font-weight:700;touch-action:none}
+#fb{right:18px;bottom:calc(26px + env(safe-area-inset-bottom));width:88px;height:88px;background:#dc2626bb;font-size:32px}
+#wb{right:118px;bottom:calc(30px + env(safe-area-inset-bottom));width:60px;height:60px;background:#0ea5e9bb}
+#js{position:fixed;width:100px;height:100px;border-radius:50%;border:2px solid #fff5;background:#fff1;display:none;pointer-events:none}
+#jk{position:absolute;width:44px;height:44px;border-radius:50%;background:#fff6;left:28px;top:28px}
+#menu{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(120% 70% at 50% 0%,#3a1c57,#07040d);padding:20px;text-align:center}
+#menu h1{margin:0;font-size:42px;text-shadow:0 0 22px #ffb45488}
+#menu button{width:min(100%,360px);font:inherit;font-weight:700;font-size:18px;padding:15px;border:0;border-radius:14px;color:#1b1006;background:linear-gradient(180deg,#ffc87c,#ff9a3c)}
+#menu button.g{background:linear-gradient(180deg,#92f2d6,#3fc7a0);color:#04241c}
+#menu p{margin:0;font-size:13px;color:#a99dbb;line-height:1.8;max-width:360px}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud">
+ <div id="top"><span id="sc">0</span><span id="wv"></span><span id="am"></span></div>
+ <div id="hp"><div id="hpb"></div></div>
+ <canvas id="mm" width="84" height="84"></canvas>
+ <div id="cmb"></div><div id="msg"></div><div id="cross"></div><div id="dmg"></div>
+</div>
+<div id="js"><div id="jk"></div></div>
+<div class="btn" id="fb">🔥</div><div class="btn" id="wb">🔫</div>
+<div id="menu">
+ <h1>👻 البيت المسكون 3D</h1>
+ <p id="best"></p>
+ <button class="g" id="m1">🌙 طور الاستمتاع — تصويب تلقائي، ذخيرة لا تنتهي، بدون خسارة</button>
+ <button id="m2">💀 طور التحدي — موجات وزعماء وصحة محدودة</button>
+ <p>الجوال: اسحب بالنصف الأيسر للحركة، وبالأيمن للنظر، 🔥 للإطلاق، 🔫 لتبديل السلاح.<br>الكمبيوتر: WASD + الماوس + نقر للإطلاق + Q للتبديل.<br>اجمع ❤️ صحة، 🟡 ذخيرة، ⭐ سرعة وإطلاق سريع.</p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id),rnd=n=>Math.floor(Math.random()*n);
+const N=21,C=4,H=3.2;
+const cv=$('c'),R=new THREE.WebGLRenderer({canvas:cv,antialias:false});
+R.setPixelRatio(Math.min(devicePixelRatio,1.5));
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x07040d);scene.fog=new THREE.FogExp2(0x07040d,.075);
+const cam=new THREE.PerspectiveCamera(70,1,.1,60);scene.add(cam);
+function rs(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',rs);rs();
+scene.add(new THREE.AmbientLight(0x6a5a8a,.55));
+const torch=new THREE.PointLight(0xffb060,1.5,20);cam.add(torch);torch.position.set(0,.2,0);
+const gun=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.55),new THREE.MeshLambertMaterial({color:0x444455}));
+gun.position.set(.3,-.28,-.6);cam.add(gun);
+// textures
+function tex(c1,c2){const k=document.createElement('canvas');k.width=k.height=64;const x=k.getContext('2d');x.fillStyle=c1;x.fillRect(0,0,64,64);x.fillStyle=c2;
+ for(let r=0;r<4;r++)for(let b=0;b<2;b++)x.fillRect((r%2)*16+b*32+1,r*16+1,30,14);
+ for(let i=0;i<200;i++){x.fillStyle=`rgba(0,0,0,${Math.random()*.25})`;x.fillRect(rnd(64),rnd(64),2,2)}
+ const t=new THREE.CanvasTexture(k);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
+const wallM=new THREE.MeshLambertMaterial({map:tex('#2a2036','#4a3a62')});
+const fl=tex('#1c1410','#2e2118');fl.repeat.set(N,N);
+const floorM=new THREE.MeshLambertMaterial({map:fl}),ceilM=new THREE.MeshLambertMaterial({color:0x15101c});
+// world
+let g,world,dist,mmL;
+function gen(){
+ g=Array.from({length:N},()=>Array(N).fill(1));g[1][1]=0;const st=[[1,1]];
+ while(st.length){const[x,y]=st[st.length-1];
+  const d=[[2,0],[-2,0],[0,2],[0,-2]].sort(()=>Math.random()-.5).find(([a,b])=>{const nx=x+a,ny=y+b;return nx>0&&ny>0&&nx<N-1&&ny<N-1&&g[ny][nx]});
+  if(!d){st.pop();continue}g[y+d[1]/2][x+d[0]/2]=0;g[y+d[1]][x+d[0]]=0;st.push([x+d[0],y+d[1]])}
+ for(let k=0;k<45;k++)g[1+rnd(N-2)][1+rnd(N-2)]=0;
+ if(world)scene.remove(world);world=new THREE.Group();scene.add(world);
+ let n=0;g.forEach(r=>r.forEach(v=>n+=v));
+ const im=new THREE.InstancedMesh(new THREE.BoxGeometry(C,H,C),wallM,n),m=new THREE.Matrix4();let i=0;
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(g[y][x]){m.setPosition(x*C,H/2,y*C);im.setMatrixAt(i++,m)}
+ world.add(im);const mid=(N-1)*C/2,pl=new THREE.PlaneGeometry(N*C,N*C);
+ const f=new THREE.Mesh(pl,floorM);f.rotation.x=-Math.PI/2;f.position.set(mid,0,mid);
+ const c=new THREE.Mesh(pl,ceilM);c.rotation.x=Math.PI/2;c.position.set(mid,H,mid);world.add(f,c);
+ mmL=document.createElement('canvas');mmL.width=mmL.height=84;const x=mmL.getContext('2d');x.fillStyle='#000a';x.fillRect(0,0,84,84);x.fillStyle='#6b5f86';
+ for(let y=0;y<N;y++)for(let xx=0;xx<N;xx++)if(g[y][xx])x.fillRect(xx*4,y*4,4,4);
+}
+const bl=(x,z,r)=>{for(const[a,b]of[[r,r],[-r,r],[r,-r],[-r,-r]]){const i=Math.round((x+a)/C),j=Math.round((z+b)/C);if(i<0||j<0||i>=N||j>=N||g[j][i])return true}return false};
+const mv=(o,dx,dz,r)=>{if(!bl(o.x+dx,o.z,r))o.x+=dx;if(!bl(o.x,o.z+dz,r))o.z+=dz};
+function flow(){dist=Array.from({length:N},()=>Array(N).fill(-1));const si=Math.round(P.x/C),sj=Math.round(P.z/C);dist[sj][si]=0;const q=[[si,sj]];
+ for(let h=0;h<q.length;h++){const[x,y]=q[h];for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+a,ny=y+b;if(nx>=0&&ny>=0&&nx<N&&ny<N&&!g[ny][nx]&&dist[ny][nx]<0){dist[ny][nx]=dist[y][x]+1;q.push([nx,ny])}}}}
+// state
+const P={x:4,z:4,yaw:0,hp:100,inv:0};
+let E=[],PK=[],mode=0,play=false,sc=0,wave=0,combo=0,ct=0,wt=0,toSpawn=0,sp=0,fire=0,boost=0,wi=0,rf=0,flow_t=0,msgT=0,gamet=0;
+const W=[{n:'مسدس',cd:.3,p:1,s:.01,d:1.3},{n:'رشاش',cd:.1,p:1,s:.05,d:1},{n:'شوتغن',cd:.75,p:6,s:.2,d:1}];
+let am=[1e9,60,16];
+const best=()=>{try{return +localStorage.getItem('h3best'+mode)||0}catch(e){return 0}};
+$('best').textContent='أفضل نتيجة تحدي: '+(()=>{try{return +localStorage.getItem('h3best1')||0}catch(e){return 0}})();
+// audio
+let AC;function beep(f,d,t='square',v=.05,f2){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),gn=AC.createGain();o.type=t;o.frequency.value=f;if(f2)o.frequency.exponentialRampToValueAtTime(f2,AC.currentTime+d);gn.gain.value=v;gn.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(gn);gn.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const say=(t,s=1.6)=>{$('msg').textContent=t;msgT=s};
+function start(m){
+ mode=m;gen();Object.assign(P,{x:C,z:C,yaw:0,hp:100,inv:2});
+ for(const e of E)scene.remove(e.m);for(const k of PK)scene.remove(k.m);E=[];PK=[];
+ sc=0;wave=0;combo=0;wt=1;toSpawn=0;boost=0;wi=0;am=[1e9,60,16];gamet=0;
+ $('menu').style.display='none';play=true;nextWave();
+ if(!matchMedia('(pointer:coarse)').matches)cv.requestPointerLock&&cv.requestPointerLock();
+}
+function nextWave(){wave++;toSpawn=5+wave*3;sp=0;const b=wave%5===0;if(b)toSpawn++;say(b?'👹 زعيم! موجة '+wave:'الموجة '+wave);
+ P.hp=Math.min(100,P.hp+(mode?40:20));am[1]+=15;am[2]+=4}
+function spawn(boss){
+ flow();let t=0,c;do{c=[1+rnd(N-2),1+rnd(N-2)];t++}while(t<80&&(g[c[1]][c[0]]||dist[c[1]][c[0]]<5));
+ if(g[c[1]][c[0]]||dist[c[1]][c[0]]<0)return;
+ const r=Math.random(),ty=boss?3:wave>2&&r<.2?2:wave>1&&r<.5?1:0;
+ const D=[[0xcfe8ff,.55,2.3,2+wave*.3,10],[0xff5a5a,.4,4,1,15],[0x9b59ff,.8,1.6,7+wave,30],[0xff2d6f,1.3,2.1,30+wave*4,200]][ty];
+ const m=new THREE.Group(),mat=new THREE.MeshLambertMaterial({color:D[0],emissive:D[0],emissiveIntensity:.35,transparent:true,opacity:.92});
+ const b=new THREE.Mesh(new THREE.SphereGeometry(D[1],10,8),mat);b.scale.y=1.3;const cn=new THREE.Mesh(new THREE.ConeGeometry(D[1],D[1]*1.4,10),mat);cn.position.y=-D[1]*1.2;cn.rotation.x=Math.PI;
+ const ey=new THREE.MeshBasicMaterial({color:0}),e1=new THREE.Mesh(new THREE.SphereGeometry(D[1]*.15,6,6),ey),e2=e1.clone();e1.position.set(-D[1]*.35,D[1]*.3,D[1]*.85);e2.position.set(D[1]*.35,D[1]*.3,D[1]*.85);
+ m.add(b,cn,e1,e2);m.position.set(c[0]*C,1.2,c[1]*C);scene.add(m);
+ E.push({m,x:c[0]*C,z:c[1]*C,r:D[1],sp:D[2]*(mode?.75:1),hp:D[3],sc:D[4],ph:Math.random()*6,at:0})}
+function drop(x,z){const r=Math.random();if(r>(mode?.4:.3))return;const k=r<.12?'h':r<.24?'a':r<.28?'s':'a',col={h:0x66ff88,a:0xffd54f,s:0x4dd0ff}[k];
+ const m=new THREE.Mesh(new THREE.OctahedronGeometry(.35),new THREE.MeshBasicMaterial({color:col}));m.position.set(x,.8,z);scene.add(m);PK.push({m,k,x,z})}
+// shooting
+function ray(a){const dx=-Math.sin(a),dz=-Math.cos(a);let wd=40;for(let t=.3;t<40;t+=.3)if(bl(P.x+dx*t,P.z+dz*t,0)){wd=t;break}
+ let b=null,bt=wd;for(const e of E){const rx=e.x-P.x,rz=e.z-P.z,t=rx*dx+rz*dz;if(t<0||t>bt)continue;const q=rx-dx*t,w=rz-dz*t;if(q*q+w*w<e.r*e.r){b=e;bt=t}}return[b,bt,dx,dz]}
+function shoot(){
+ const w=W[wi];if(am[wi]<=0){wi=0;return}if(!mode||wi===0){}if(!mode&&wi)am[wi]--;
+ fire=boost>0?w.cd*.55:w.cd;gun.position.z=-.5;beep(wi===2?90:wi===1?300:200,.08,'sawtooth',.06,60);torch.intensity=3;
+ let base=P.yaw;
+ if(mode){let bd=.4,ba=null;for(const e of E){const a=Math.atan2(-(e.x-P.x),-(e.z-P.z)),d=Math.abs(Math.atan2(Math.sin(a-P.yaw),Math.cos(a-P.yaw)));if(d<bd&&ray(a)[0]===e){bd=d;ba=a}}if(ba!==null)base=ba}
+ for(let i=0;i<w.p;i++){const a=base+(Math.random()-.5)*w.s*2,[e,t,dx,dz]=ray(a);
+  const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(P.x-dx*-.5,1.2,P.z),new THREE.Vector3(P.x+dx*Math.min(t,25),1.2,P.z+dz*Math.min(t,25))]),new THREE.LineBasicMaterial({color:0xffe08a}));
+  scene.add(ln);setTimeout(()=>scene.remove(ln),45);
+  if(e){e.hp-=w.d*(mode?1.4:1);e.m.scale.setScalar(1.15);e.hit=.08;beep(500,.05,'square',.04);if(e.hp<=0)kill(e)}}}
+function kill(e){scene.remove(e.m);E.splice(E.indexOf(e),1);combo++;ct=4;sc+=e.sc*Math.min(5,1+combo*.1)|0;drop(e.x,e.z);beep(160,.2,'triangle',.07,40);
+ if(combo&&combo%10===0)say('🔥 كومبو '+combo+'!',1.2)}
+function hurt(d){if(P.inv>0)return;P.hp-=d*(mode?.4:1);combo=0;$('dmg').style.opacity=1;setTimeout(()=>$('dmg').style.opacity=0,120);beep(90,.15,'sawtooth',.07,50);
+ if(P.hp<=0){if(mode){P.hp=100;P.x=C;P.z=C;P.inv=3;say('👻 عدت للحياة!')}else over()}}
+function over(){play=false;document.exitPointerLock&&document.exitPointerLock();let b=best();try{if(sc>b)localStorage.setItem('h3best'+mode,sc)}catch(e){}
+ $('best').textContent='انتهت! نتيجتك '+sc+' — الموجة '+wave;$('menu').style.display='flex'}
+// input
+const K={},T={};let jx=0,jy=0,fb=false;
+addEventListener('keydown',e=>{K[e.code]=1;if(e.code==='KeyQ')swap()});addEventListener('keyup',e=>K[e.code]=0);
+addEventListener('mousemove',e=>{if(document.pointerLockElement)P.yaw-=e.movementX*.0025});
+cv.addEventListener('mousedown',()=>{if(play&&!document.pointerLockElement)cv.requestPointerLock();fb=true});addEventListener('mouseup',()=>fb=false);
+function swap(){do{wi=(wi+1)%3}while(am[wi]<=0)}
+const js=$('js'),jk=$('jk');
+addEventListener('touchstart',e=>{if(!play)return;for(const t of e.changedTouches){if(t.target.classList.contains('btn'))continue;
+ if(t.clientX<innerWidth/2){T[t.identifier]={l:1,x:t.clientX,y:t.clientY};js.style.display='block';js.style.left=t.clientX-50+'px';js.style.top=t.clientY-50+'px'}
+ else T[t.identifier]={x:t.clientX}}e.preventDefault()},{passive:false});
+addEventListener('touchmove',e=>{if(!play)return;for(const t of e.changedTouches){const s=T[t.identifier];if(!s)continue;
+ if(s.l){let dx=(t.clientX-s.x)/45,dy=(t.clientY-s.y)/45,m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m}jx=dx;jy=dy;jk.style.transform=`translate(${dx*30}px,${dy*30}px)`}
+ else{P.yaw-=(t.clientX-s.x)*.007;s.x=t.clientX}}e.preventDefault()},{passive:false});
+const te=e=>{for(const t of e.changedTouches){const s=T[t.identifier];if(s&&s.l){jx=jy=0;js.style.display='none';jk.style.transform=''}delete T[t.identifier]}};
+addEventListener('touchend',te);addEventListener('touchcancel',te);
+$('fb').addEventListener('touchstart',e=>{fb=true;e.preventDefault()},{passive:false});$('fb').addEventListener('touchend',()=>fb=false);
+$('wb').addEventListener('touchstart',e=>{swap();e.preventDefault()},{passive:false});$('wb').addEventListener('click',swap);
+$('m1').onclick=()=>start(1);$('m2').onclick=()=>start(0);
+// loop
+const mmc=$('mm').getContext('2d');let last=performance.now();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;if(play)upd(dt,now/1000);
+ cam.position.set(P.x,1.5+Math.sin(now/180)*(Math.hypot(jx,jy)>.2?.04:0),P.z);cam.rotation.y=P.yaw;R.render(scene,cam)}
+function upd(dt,t){
+ gamet+=dt;P.inv-=dt;fire-=dt;boost-=dt;ct-=dt;msgT-=dt;if(msgT<0)$('msg').textContent='';if(ct<0)combo=0;
+ gun.position.z+=(-.6-gun.position.z)*.3;torch.intensity+=(1.4+Math.random()*.3-torch.intensity)*.2;
+ let fx=(K.KeyD?1:0)-(K.KeyA?1:0)+jx,fz=(K.KeyS?1:0)-(K.KeyW?1:0)+jy;const m=Math.hypot(fx,fz);if(m>1){fx/=m;fz/=m}
+ const v=(boost>0?7:5)*dt,c=Math.cos(P.yaw),s=Math.sin(P.yaw);mv(P,(fx*c+fz*s)*v,(-fx*s+fz*c)*v,.4);
+ if(fb&&fire<=0)shoot();
+ if(mode)P.hp=Math.min(100,P.hp+3*dt);
+ flow_t-=dt;if(flow_t<=0){flow();flow_t=.25}
+ sp-=dt;if(toSpawn>0&&sp<=0&&E.length<(mode?18:22)){spawn(toSpawn===1&&wave%5===0);toSpawn--;sp=mode?1.1:.8}
+ if(toSpawn===0&&E.length===0){wt-=dt;if(wt<=0){wt=3;nextWave()}}
+ for(const e of E){const ci=Math.round(e.x/C),cj=Math.round(e.z/C);let tx=P.x,tz=P.z;
+  if(Math.hypot(P.x-e.x,P.z-e.z)>C*.9&&dist[cj]&&dist[cj][ci]>0){let bd=dist[cj][ci],bx=0,bz=0;
+   for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const d=dist[cj+b]&&dist[cj+b][ci+a];if(d>=0&&d<bd){bd=d;bx=a;bz=b}}tx=(ci+bx)*C;tz=(cj+bz)*C}
+  const dx=tx-e.x,dz=tz-e.z,d=Math.hypot(dx,dz)||1;mv(e,dx/d*e.sp*dt,dz/d*e.sp*dt,e.r*.6);
+  e.ph+=dt*3;e.m.position.set(e.x,1.2+Math.sin(e.ph)*.15,e.z);e.m.rotation.y=Math.atan2(P.x-e.x,P.z-e.z);
+  if(e.hit>0){e.hit-=dt;if(e.hit<=0)e.m.scale.setScalar(1)}
+  e.at-=dt;if(Math.hypot(P.x-e.x,P.z-e.z)<e.r+.6&&e.at<=0){hurt(e.sc>100?20:e.sc>20?14:8);e.at=.9}}
+ for(let i=PK.length-1;i>=0;i--){const k=PK[i];k.m.rotation.y+=dt*3;k.m.position.y=.8+Math.sin(t*3)*.1;
+  if(Math.hypot(P.x-k.x,P.z-k.z)<1.2){scene.remove(k.m);PK.splice(i,1);beep(700,.12,'sine',.07,1200);
+   if(k.k==='h')P.hp=Math.min(100,P.hp+25);else if(k.k==='a'){am[1]+=30;am[2]+=6}else{boost=8;say('⭐ سرعة وإطلاق سريع!')}}}
+ $('sc').textContent='⭐ '+sc;$('wv').textContent='موجة '+wave+' • أعداء '+(E.length+toSpawn);
+ $('am').textContent=W[wi].n+' '+(mode||wi===0?'∞':am[wi]);$('hpb').style.width=Math.max(0,P.hp)+'%';$('cmb').textContent=combo>2?'x'+combo+' 🔥':'';
+ mmc.clearRect(0,0,84,84);mmc.drawImage(mmL,0,0);mmc.fillStyle='#f55';for(const e of E)mmc.fillRect(e.x/C*4+1,e.z/C*4+1,3,3);
+ mmc.fillStyle='#fd5';for(const k of PK)mmc.fillRect(k.x/C*4+1,k.z/C*4+1,2,2);mmc.fillStyle='#4f8';mmc.fillRect(P.x/C*4+1,P.z/C*4+1,4,4)}
+gen();requestAnimationFrame(loop);
+</script></body></html>
